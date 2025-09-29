@@ -1,0 +1,92 @@
+@model FriendlySeed.Models.WebsiteSettings
+
+@{
+    ViewData["Title"] = "網站設定";
+}
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">
+                    <i class="fas fa-cog"></i> 網站設定
+                </h3>
+            </div>
+            <div class="card-body">
+                <form asp-action="Index" method="post">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label asp-for="WebsiteName" class="form-label">網站名稱</label>
+                                <input asp-for="WebsiteName" class="form-control" placeholder="請輸入網站名稱" />
+                                <span asp-validation-for="WebsiteName" class="text-danger"></span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label asp-for="ContactEmail" class="form-label">聯絡信箱</label>
+                                <input asp-for="ContactEmail" class="form-control" placeholder="請輸入聯絡信箱" />
+                                <span asp-validation-for="ContactEmail" class="text-danger"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label asp-for="PageTitle" class="form-label">網站標題</label>
+                                <input asp-for="PageTitle" class="form-control" placeholder="請輸入網站標題" />
+                                <span asp-validation-for="PageTitle" class="text-danger"></span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label asp-for="Favicon" class="form-label">網站小圖示</label>
+                                <input asp-for="Favicon" class="form-control" placeholder="請輸入網站小圖示路徑" />
+                                <span asp-validation-for="Favicon" class="text-danger"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label asp-for="MetaDescription" class="form-label">網站描述</label>
+                        <textarea asp-for="MetaDescription" class="form-control" rows="3" placeholder="請輸入網站描述"></textarea>
+                        <span asp-validation-for="MetaDescription" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label asp-for="MetaKeywords" class="form-label">關鍵字</label>
+                        <input asp-for="MetaKeywords" class="form-control" placeholder="請輸入關鍵字，用逗號分隔" />
+                        <span asp-validation-for="MetaKeywords" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label asp-for="CopyrightText" class="form-label">版權聲明</label>
+                        <input asp-for="CopyrightText" class="form-control" placeholder="請輸入版權聲明" />
+                        <span asp-validation-for="CopyrightText" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <div class="form-check">
+                            <input asp-for="IsActive" class="form-check-input" />
+                            <label asp-for="IsActive" class="form-check-label">啟用網站</label>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> 儲存設定
+                        </button>
+                        <a href="@Url.Action("Index", "Home", new { area = "Admin" })" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left"></i> 返回首頁
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

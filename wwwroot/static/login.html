@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+  <!-- 登入頁 -->
+
+  <!-- 
+  登入頁裡面的忘記密碼點完要只有顯示忘記密碼彈窗,輸入完email按下送出後
+  要顯示發送成功,最後要重設密碼,密碼條件需要符合才能設定之後按下按鈕要讓他回到登入頁,
+  下方彈窗css都是先設定display:none;
+  打開是display:block;
+   
+  這邊有個成對 data API 可使用，分別為 data-goto 與 data-gototarget. 簡單來說，點選 data-goto 的話就要顯示 data-gototarget 的欄位。因此點選 `<a href="#" class="forgot-password" data-goto="forget-password">忘記密碼?</a>` 就要顯示 `<div class="login-style forget-password hide" data-gototarget="forget-password">` 的元件。
+  -->
+  <head> <meta charset="UTF-8" />
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>good博士</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link
+  rel="preload"
+  href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400&family=Roboto:wght@400&display=swap"
+  as="style"
+  onload="this.onload=null;this.rel='stylesheet'"
+/>
+<noscript>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400&family=Roboto:wght@400&display=swap"
+    rel="stylesheet"
+  />
+</noscript>
+
+<link
+  rel="stylesheet"
+  href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+  media="print"
+  onload="this.media='all'"
+/>
+<noscript>
+  <link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+  />
+</noscript>
+
+<script
+  src="https://code.jquery.com/jquery-3.6.0.min.js"
+  integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4="
+  crossorigin="anonymous"
+  defer
+></script>
+<script defer src="../assets/js/main.js"></script><script defer src="../assets/js/mains.js"></script><script defer src="../assets/js/login.js"></script><link href="../assets/css/main.css" rel="stylesheet"></head>
+  <body class="login-reg-bac-v2-pure">
+    <!-- 網頁遮罩 -->
+    <div class="overlay-landscape-modal-phone" role="document">
+      <div class="modal-box">
+        <div class="modal-header-content">
+          <h4 class="modal-header-title">請旋轉您的螢幕</h4>
+        </div>
+        <div class="modal-content">
+          <p>
+            為確保功能正常，且讓您有最好的使用體驗，請將您的螢幕旋轉為橫向，謝謝！
+          </p>
+        </div>
+      </div>
+    </div>
+    <div class="overlay-landscape"></div>
+    <!-- 分隔線 -->
+    <header><div class="header" data-header-mode="regular">
+  <div class="hader-img">
+    <a href="index.html"
+      ><img src="../assets/img/good博士LOGO-v2.png" loading="lazy" alt="good博士"
+    /></a>
+  </div>
+  <div class="hamburger-icon">
+    <i class="fa-solid fa-bars"></i>
+  </div>
+  <div class="header-nav">
+    <ul class="items">
+      <a class="item" href="news-release.html">最新消息</a>
+      <a class="item illustrate-btn" href="#website-introduction">網站簡介</a>
+      <a class="item" href="quiz.html">顧家博士大考驗</a>
+      <a class="item" href="choose-unit-v2.html">【一般】首席研究小組PK賽</a>
+      <a class="item" href="login.html">【教學】首席研究小組PK賽</a>
+      <a class="item" href="things-about-emissions-new.html">不可不知淨零排放二三事</a>
+      <a class="item" href="ultimate-strategy.html">究極攻略</a>
+    </ul>
+
+    <i class="fa-solid fa-x"></i>
+  </div>
+  <div id="website-introduction" class="game-illustrate">
+    <h1 hidden>網站簡介</h1>
+    <article class="help game-ill-item">
+      <h2 class="illustration-title">Earth 英雄聯盟</h2>
+      <section class="section">
+        <h3>面對與全球環境變遷的氣候緊急，我們該怎麼辦？</h3>
+        <p>別擔心，<strong>四位綠英雄決定現身</strong>，帶領大家找到與環境共好的淨零綠生活。</p>
+        <p>快來認識並加入<strong>Earth 英雄聯盟</strong>，從日常生活開始，一起邁向淨零未來！</p>
+      </section>
+      <section class="section">
+        <div>
+          <img src="../assets/img/不Buy超人int.png" alt="不是不會「買」是會挑著買 我是「不 Buy 超人」，邀你聰明購，為地球減壓！" loading="lazy" />
+          <dl hidden>
+            <dt>武器</dt>
+            <dd>超級手機</dd>
+            <dt>絕招</dt>
+            <dd>超智英熊</dd>
+            <dt>自介</dt>
+            <dd>手機在手，環保資訊一秒掌握，從產地製程到包裝去向都了解清楚；行動支付不受阻，召集英雄也沒問題，買東西前早就查好該不該買；每一次消費都經過判斷，綠色選擇才是我的風格。</dd>
+          </dl>
+        </div>
+        <div>
+          <img src="../assets/img/顧家博士int.png" alt="全地球最懂「住」的鳥來了 我是「Good 顧家博士」，有沒有興趣加入我的研究室呀？" loading="lazy" />
+          <dl hidden>
+            <dt>武器</dt>
+            <dd>Good家要塞</dd>
+            <dt>絕招</dt>
+            <dd>神奇鷹眼</dd>
+            <dt>自介</dt>
+            <dd>綠建築、節能省水、資源回收一手掌握，研究室也是最強要塞；偷電偷水的死角，鷹眼一掃全識破——資源浪費 No，破綻都現形；選家電不能只看外表，效能環保兼具，才配得上我的研究室。</dd>
+          </dl>
+        </div>
+        <div>
+          <img src="../assets/img/優食戰警int.png" alt="唯有「飲食」我不會讓步 我是「優食戰警」，讓我們一起當個愛地球的吃貨！" loading="lazy" />
+          <dl hidden>
+            <dt>武器</dt>
+            <dd>優食雷射眼</dd>
+            <dt>絕招</dt>
+            <dd>龜派吃功</dd>
+            <dt>自介</dt>
+            <dd>雷射眼掃過去——當季當地、產地履歷和標章都一目了然；環保餐具固定收在龜殼裡，用餐時一把掀開就能上場；從來不剩飯也不浪費，帥氣清盤才是我的風格。</dd>
+          </dl>
+        </div>
+        <div>
+          <img src="../assets/img/無痕遊俠士int.png" alt="出門「旅遊」也要無痕上路 我是「無痕遊俠」，山海走透透，成為走哪都綠的玩咖！" loading="lazy" />
+          <dl hidden>
+            <dt>武器</dt>
+            <dd>無痕百寶帽</dd>
+            <dt>絕招</dt>
+            <dd>如虎添翼</dd>
+            <dt>自介</dt>
+            <dd>百寶帽超神奇，環保杯、換洗衣物樣樣有位子，旅途中通通帶得走；行動迅速不含糊，一天跑三個景點再去淨灘也沒在怕；走過像沒來過，不留痕才是遊俠的旅行美學。</dd>
+          </dl>
+        </div>
+      </section>
+    </article>
+    <article class="introduction game-ill-item">
+      <h2 class="illustration-title"><span>聯盟緣起</span></h2>
+      <section class="section">
+        <h3>推動綠生活政策｜環境教育教學工具包與人才培訓雙軌推展</h3>
+        <p>為回應<strong>臺灣 2050 淨零排放政策</strong>，<strong>國家環境研究院</strong>(以下簡稱國環院) 自民國 110 年起編製具教學引導性與生活關聯性的<strong>綠生活教學工具包</strong>，提供各級場域推廣永續教育之用。同時徵選具教學熱忱的環境教育人員為<strong>淨零綠生活推廣種子講師</strong>，透過進階培訓課程，協助講師熟悉教材內容與教學應用，擴大綠行動推廣影響力</p>
+      </section>
+      <section class="section">
+        <h3>Earth 英雄教案發展｜從生活行動到淨零實踐</h3>
+        <p>延續政策方向與教學需求，國環院於民國 111 年推出《<strong>Earth 英雄聯盟</strong>》，以臺灣野生動物形象設計四位綠英雄，引導國小中高年級至國中生從四大綠生活面向，<strong>認識綠生活行動與氣候變遷、環境污染、資源枯竭等全球議題的關聯</strong>，促進學員的實踐動機。</p>
+        <p>民國 112 年再發展《<strong>Good 顧家博士的淨零挑戰</strong>》，延續《 Earth 英雄聯盟》世界觀，以 Good 顧家博士的研究室為主軸聚焦<strong>居家減碳主題</strong>，透過情境模擬生活行為的選擇，協助國中以上至成人<strong>辨識高碳行為並提出改善策略</strong>，強化永續觀念與行動力。</p>
+        <p>兩套教案一動一靜，分別以行動激發與反思引導為核心，協助學員將永續觀念轉化為日常選擇，強化民眾面對環境議題的行動能力。</p>
+      </section>
+      <section class="section">
+        <h3>居家減碳模擬遊戲｜打造綠生活實踐的多媒體教學資源<h32>
+        <p>為提升教材可即性與互動性，國環院於民國 113 年再升級將<strong>《Good 顧家博士的淨零挑戰》內容數位化</strong>。網站延續教案情境與互動挑戰，引導使用者透過居家空間檢視行動選擇，<strong>認識生活碳排放並學習具體減碳策略</strong>。期望讓每位使用者都能從中<strong>找到專屬自己的綠生活，加入成為 Earth 英雄聯盟的一員，實踐日常淨零行動。</strong></p>
+      </section>
+    </article>
+    <!-- <article class="partners game-ill-item">
+      <h2 class="illustration-title">聯盟成員</h2>
+      <section class="logos">
+        <div class="item"></div>
+        <div class="item"></div>
+        <div class="item"></div>
+        <div class="item"></div>
+        <div class="item"></div>
+        <div class="item"></div>
+      </section>
+      <button type="button" class="more">查看更多成員</button>
+    </article> -->
+    <article class="copyright game-ill-item">
+      <h2>版權聲明</h2>
+      <p>本授權條款允許使用者重製、散布、傳輸以及修改著作，但不得為商業目的之使用。若使用者修改該著作時 ，僅得依本授權條款或與本授權條款類似者來散布該衍生作品。使用時必須按照著作人指定的方式表彰其姓名。</p>
+    </article>
+    <article class="credits game-ill-item">
+      <h2>網站設計</h2>
+      <p>本網站由<strong>環境友善種子股份有限公司</strong>負責教案規劃與介面設計，並與<strong>樂活多媒體有限公司</strong>協力完成整體互動介面設計與網站程式開發。</p>
+    </article>
+    <i class="fa-solid fa-x"></i>
+  </div>
+</div>
+</header>
+    <div class="containerBox">
+      <!-- 登入 -->
+      <div class="login-style login" data-gototarget="login">
+        <div class="login-title">登入註冊</div>
+        <div class="login-des">使用帳號密碼登入</div>
+
+        <div class="login-inputboxs">
+          <form class="login-form" action="pk-game-login.html">
+            <div class="form-group">
+              <label for="username">帳號</label>
+              <input class="input" type="text" id="username" required />
+            </div>
+            <div class="form-group">
+              <label for="password">密碼 </label>
+              <input class="input" type="password" id="password" required />
+            </div>
+
+            <div class="form-options">
+              <div class="remember-me">
+                <input type="checkbox" id="remember" />
+                <label for="remember">記住我的帳號密碼</label>
+              </div>
+              <a href="#" class="forgot-password" data-goto="forget-password">忘記密碼?</a>
+            </div>
+            <div class="btn-box">
+              <button class="login-btn">登入</button>
+            </div>
+            <div class="register-box">
+              <span>沒有帳號嗎?</span><a href="register.html">趕快註冊入學！</a>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- 忘記密碼 -->
+      <div class="login-style forget-password hide" data-gototarget="forget-password">
+        <div class="login-title">忘記密碼</div>
+        <div class="login-inputboxs">
+          <form class="login-form" action="">
+            <div class="form-group">
+              <label for="email">電子郵件</label>
+              <input class="input" type="email" id="email" required />
+            </div>
+            <div class="btn-box">
+              <button class="login-btn forgetBtn" data-goto="sendout">送出</button>
+            </div>
+          </form>
+        </div>
+      </div>
+      
+      <!-- 發送成功 -->
+      <div class="login-style sendout hide" data-gototarget="sendout">
+        <div class="login-title">發送成功!</div>
+        <p>請檢查信箱開啟連結，您將會在電子郵件信箱中收到重設密碼的連結。</p>
+        <div hidden>
+          <button data-goto="restPassword">來重設密碼！</button>
+        </div>
+      </div>
+
+      <!-- 重設密碼 -->
+      <div class="login-style restPassword hide" data-gototarget="restPassword">
+        <div class="login-title">重設密碼</div>
+        <div class="login-inputboxs">
+          <form class="login-form -restPassword">
+            <div class="form-group">
+              <label for="password">新密碼 </label>
+              <input class="input" type="password" id="password" required />
+              <p class="pass-text">
+                密碼長度至少8字元長度以上、密碼必須包含至少一個數字 (0-9) 、
+                一個英文字母及一個特殊符號
+              </p>
+            </div>
+            <!-- 再次輸入密碼 -->
+            <div class="form-group">
+              <label for="restPassword">再次輸入密碼</label>
+              <input class="input" type="password" id="restPassword" required />
+            </div>
+            <div class="btn-box">
+              <button type="submit" class="login-btn restBtn">設定</button>
+              <input type="submit" value="successPass" data-goto="successPass" hidden />
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- 成功修改密碼 -->
+      <div class="login-style successPass hide" data-gototarget="successPass">
+        <div class="login-title">成功修改密碼</div>
+        <div class="login-inputboxs">
+          <div class="btn-box">
+            <button class="login-btn successBtn" data-goto="login">回到登入</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <footer><div class="footer-bac">
+    <div class="footer">
+        <div class="footer-address">
+            <div class="info">
+                <!-- siteinfo -->
+                <ul class="link-list">
+                    <li><a class="link-btn" target="_blank" href="#">國家環境研究院</a></li>
+                    <li><a class="link-btn" target="_blank" href="https://www.moenv.gov.tw/page/B12F9A27ED79AB88">網頁政策及宣告</a></li>
+                    <li><a class="link-btn" target="_blank" href="https://epamail.moenv.gov.tw">意見信箱</a></li>
+                    <li><a class="link-btn" target="_blank" href="https://forms.gle/V9hGNiN7fCi4bmwXA">網站回饋</a></li>
+                </ul>
+                <p>地址：320680 桃園市中壢區民族路3段260號</p>
+                <p>電話（總機）：<a href="tel:+88634915818">(03) 491-5818</a></p>
+                <p>委辦單位：環境友善種子股份有限公司</p>
+                <p>服務電話：<a href="tel:+886223680603">(02) 2368-0603 #16、19、20</a></p>
+                <!-- <p>Edge 以上, Opera9.01 以上, 1280 * 1024 以上為最佳瀏覽狀態</p> -->
+            </div>
+        </div>
+        <div class="footer-sites">
+        </div>
+        <div class="footer-info">
+            <div class="footer-sites">
+                <ul class="link-list">
+                    <li><a target="_blank" href="news-release.html" class="link-btn">最新消息</a></li>
+                    <li><a target="_blank" href="#" class="link-btn">網站導覽</a></li>
+                    <li><a class="link-btn" target="_blank" href="https://neecs.moenv.gov.tw/Human/HumanQuery">環境教育人才庫</a></li>
+                    <li><a class="link-btn" target="_blank" href="https://pse.is/7gaz3q">種子講師回饋問卷</a></li>
+                    <li><a class="link-btn" target="_blank" href="https://greenlifestyle.moenv.gov.tw/CarbonPublicPage">生活碳計算器</a></li>
+                </ul>
+            </div>
+            <div class="sns">
+                <a href="https://www.facebook.com/MOENV.TW/"><img src="../assets/img/Facebook.svg"
+                        alt="Facebook site: @MOENV.TW" height="45" /></a>
+                <a href="https://www.instagram.com/moenv.tw"><img src="../assets/img/Instagram.svg"
+                        alt="Instagram site: @moenv.tw" height="45" /></a>
+                <a href="https://www.threads.net/@moenv.tw"><img src="../assets/img/Threads.svg"
+                        alt="Threads site: @moenv.tw" height="45" /></a>
+                <!-- <a href="" class="a18y-logo align-right align-center-mobile"><img src="../assets/img/a18y-2-A.svg" alt="無障礙標章 2.0 檢測等級A" height="45" /></a> -->
+                <a href="" class="a18y-logo align-right align-center-mobile"><img src="../assets/img/accessibility-a.png"
+                        alt="無障礙標章 2.0 檢測等級A" height="45" /></a>
+            </div>
+            <div class="sitedata">
+                <ul class="infos">
+                    <li>瀏覽人次：<span class="visitors">1234567</span></li>
+                    <li>更新日期：<time datetime="2025-06-15">2025/06/15</time></li>
+                    <li>最佳瀏覽解析度為 <span class="res">1920x1080</span></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div></footer>
+  </body>
+</html>

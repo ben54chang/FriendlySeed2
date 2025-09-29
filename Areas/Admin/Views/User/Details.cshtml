@@ -1,0 +1,86 @@
+@model FriendlySeed.Models.User
+
+@{
+    ViewData["Title"] = "使用者詳情";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3 mb-0">使用者詳情</h1>
+    <div>
+        <a asp-action="Edit" asp-route-id="@Model.ID" class="btn btn-warning me-2">
+            <i class="fas fa-edit"></i> 編輯
+        </a>
+        <a asp-action="Index" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> 返回列表
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card shadow">
+            <div class="card-header">
+                <h5 class="mb-0">基本資訊</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <p><strong>ID:</strong> @Model.ID</p>
+                        <p><strong>使用者名稱:</strong> @Model.Username</p>
+                        <p><strong>顯示名稱:</strong> @Model.DisplayName</p>
+                        <p><strong>電子信箱:</strong> @Model.Email</p>
+                    </div>
+                    <div class="col-md-6">
+                        <p><strong>角色:</strong> @Model.Role?.RoleName</p>
+                        <p><strong>狀態:</strong> 
+                            @if (Model.IsActive)
+                            {
+                                <span class="badge bg-success">啟用</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-danger">停用</span>
+                            }
+                        </p>
+                        <p><strong>建立時間:</strong> @Model.CreatedTime.ToString("yyyy-MM-dd HH:mm")</p>
+                        <p><strong>更新時間:</strong> @Model.UpdatedTime.ToString("yyyy-MM-dd HH:mm")</p>
+                    </div>
+                </div>
+                
+                @if (!string.IsNullOrEmpty(Model.Avatar))
+                {
+                    <div class="mt-3">
+                        <strong>頭像:</strong><br>
+                        <img src="@Model.Avatar" alt="頭像" class="img-thumbnail" style="max-width: 150px;">
+                    </div>
+                }
+                
+                @if (!string.IsNullOrEmpty(Model.Description))
+                {
+                    <div class="mt-3">
+                        <strong>描述:</strong>
+                        <p class="mt-2">@Model.Description</p>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card shadow">
+            <div class="card-header">
+                <h5 class="mb-0">操作</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a asp-action="Edit" asp-route-id="@Model.ID" class="btn btn-warning">
+                        <i class="fas fa-edit"></i> 編輯使用者
+                    </a>
+                    <a asp-action="Delete" asp-route-id="@Model.ID" class="btn btn-danger">
+                        <i class="fas fa-trash"></i> 刪除使用者
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,258 @@
+html {
+  font-size: 14px;
+}
+
+@media (min-width: 768px) {
+  html {
+    font-size: 16px;
+  }
+}
+
+.btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
+  box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
+}
+
+html {
+  position: relative;
+  min-height: 100%;
+}
+
+body {
+  margin-bottom: 60px;
+}
+
+.footer {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  white-space: nowrap;
+  line-height: 60px;
+}
+
+/* Navbar Styles */
+.navbar {
+  padding: 1rem 0;
+  transition: all 0.3s ease;
+}
+
+.navbar-brand {
+  font-weight: 700;
+  font-size: 1.5rem;
+  color: #333 !important;
+}
+
+.brand-text {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.nav-link {
+  font-weight: 500;
+  transition: all 0.2s ease-in-out;
+  padding: 0.5rem 1rem !important;
+  border-radius: 0.5rem;
+  margin: 0 0.25rem;
+}
+
+.nav-link:hover {
+  color: #667eea !important;
+  background-color: rgba(102, 126, 234, 0.1);
+}
+
+.fw-500 {
+  font-weight: 500;
+}
+
+
+/* Footer Styles */
+.footer {
+  background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+  color: white;
+  margin-top: 4rem;
+}
+
+.footer h5, .footer h6 {
+  color: white;
+}
+
+.footer a {
+  transition: color 0.2s ease-in-out;
+}
+
+.footer a:hover {
+  color: #ffc107 !important;
+}
+
+.social-links a {
+  display: inline-block;
+  width: 40px;
+  height: 40px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 50%;
+  text-align: center;
+  line-height: 40px;
+  transition: all 0.3s ease;
+}
+
+.social-links a:hover {
+  background: #ffc107;
+  color: #2c3e50 !important;
+  transform: translateY(-2px);
+}
+
+/* Card Styles */
+.card {
+  transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+  border: none;
+}
+
+.card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+}
+
+/* Button Styles */
+.btn {
+  border-radius: 0.5rem;
+  font-weight: 500;
+  transition: all 0.2s ease-in-out;
+}
+
+.btn:hover {
+  transform: translateY(-1px);
+}
+
+/* Icon Styles */
+.fas, .far, .fab {
+  margin-right: 0.25rem;
+}
+
+/* Smooth scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Hero Section */
+.hero-section {
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  padding: 4rem 0;
+  display: flex;
+  align-items: center;
+}
+
+.hero-content h1 {
+  color: #2c3e50;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.hero-content .lead {
+  color: #6c757d;
+  font-size: 1.25rem;
+  line-height: 1.6;
+}
+
+.hero-actions .btn {
+  border-radius: 25px;
+  padding: 0.5rem 1.5rem;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.hero-actions .btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.hero-image {
+  position: relative;
+}
+
+/* Features Section */
+.features-section {
+  background: #f8f9fa;
+}
+
+.feature-card {
+  background: white;
+  border-radius: 15px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s ease;
+  border: 1px solid #e9ecef;
+}
+
+.feature-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+}
+
+.feature-icon {
+  transition: all 0.3s ease;
+}
+
+.feature-card:hover .feature-icon {
+  transform: scale(1.1);
+}
+
+/* Footer Link Hover Effects */
+.footer-link:hover {
+  color: #fff !important;
+  text-decoration: underline !important;
+}
+
+/* Navbar Horizontal Layout */
+.navbar-nav.d-flex {
+  align-items: center;
+}
+
+.navbar-nav .nav-link {
+  white-space: nowrap;
+}
+
+/* Responsive navbar for mobile */
+@media (max-width: 991px) {
+  .navbar-nav.d-flex {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .navbar-nav .nav-link {
+    margin-bottom: 0.5rem;
+  }
+  
+  .navbar-nav .ms-auto {
+    margin-left: 0 !important;
+    margin-top: 1rem;
+  }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .hero-section {
+    padding: 2rem 0;
+  }
+  
+  .hero-content h1 {
+    font-size: 2rem;
+  }
+  
+  .hero-content .lead {
+    font-size: 1rem;
+  }
+
+  .hero-actions .btn {
+    width: 100%;
+    max-width: 250px;
+    margin-bottom: 0.5rem;
+  }
+
+  .hero-image {
+    margin-top: 1rem;
+  }
+
+  .feature-card {
+    margin-bottom: 2rem;
+  }
+}

@@ -1,0 +1,576 @@
+@model IEnumerable<FriendlySeed.Models.User>
+@{
+    ViewData["Title"] = "使用者管理";
+}
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        @TempData["SuccessMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        @TempData["ErrorMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">
+                    <i class="fas fa-users"></i> 使用者管理
+                </h3>
+                <div class="card-tools">
+                    <button type="button" class="btn btn-success btn-sm" onclick="exportToExcel()">
+                        <i class="fas fa-file-excel"></i> 匯出 Excel
+                    </button>
+                    <button type="button" class="btn btn-primary btn-sm" onclick="openCreateModal()">
+                        <i class="fas fa-plus"></i> 新增使用者
+                    </button>
+                </div>
+            </div>
+            <div class="card-body">
+        <div class="table-responsive">
+            <table id="userTable" class="table table-bordered table-striped">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>使用者名稱</th>
+                        <th>顯示名稱</th>
+                        <th>電子信箱</th>
+                        <th>角色</th>
+                        <th>狀態</th>
+                        <th>建立時間</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var user in Model)
+                    {
+                        <tr>
+                            <td>@user.ID</td>
+                            <td>@user.Username</td>
+                            <td>@user.DisplayName</td>
+                            <td>@user.Email</td>
+                            <td>@(string.IsNullOrEmpty(user.RoleNames) ? "無角色" : user.RoleNames)</td>
+                            <td>
+                                @if (user.IsActive)
+                                {
+                                    <span class="badge bg-success">啟用</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-danger">停用</span>
+                                }
+                            </td>
+                            <td>@user.CreatedTime.ToString("yyyy-MM-dd HH:mm")</td>
+                            <td>
+                                <div class="btn-group btn-group-sm">
+                                    <button type="button" class="btn btn-info btn-sm" onclick="openEditModal(@user.ID)" title="編輯">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button type="button" class="btn btn-secondary btn-sm" onclick="changePassword(@user.ID)" title="變更密碼">
+                                        <i class="fas fa-key"></i>
+                                    </button>
+                                    <button type="button" class="btn btn-warning btn-sm" onclick="toggleStatus(@user.ID)" title="切換狀態">
+                                        <i class="fas fa-toggle-@(user.IsActive ? "on" : "off")"></i>
+                                    </button>
+                                    <button type="button" class="btn btn-danger btn-sm" onclick="deleteUser(@user.ID)" title="刪除">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- User Modal -->
+<div class="modal fade" id="userModal" tabindex="-1" aria-labelledby="userModalLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="userModalLabel">新增使用者</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="關閉"></button>
+            </div>
+            <form id="userForm" enctype="multipart/form-data">
+                <div class="modal-body">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" id="userID" name="ID" value="0" />
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                <label for="username" class="form-label">使用者名稱</label>
+                                <input type="text" id="username" name="Username" class="form-control" placeholder="請輸入使用者名稱" />
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                <label for="displayName" class="form-label">顯示名稱</label>
+                                <input type="text" id="displayName" name="DisplayName" class="form-control" placeholder="請輸入顯示名稱" />
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                <label for="email" class="form-label">電子信箱</label>
+                                <input type="email" id="email" name="Email" class="form-control" placeholder="請輸入電子信箱" />
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                <label class="form-label">角色</label>
+                                <div id="roleCheckboxes" class="border rounded p-2" style="max-height: 150px; overflow-y: auto;">
+                                    <!-- 角色選項將由 JavaScript 動態載入 -->
+                                </div>
+                                <small class="form-text text-muted">可選擇多個角色</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 密碼欄位只在新增時顯示 -->
+                    <div class="row" id="passwordFields">
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                <label for="password" class="form-label">密碼</label>
+                                <input type="password" id="password" name="Password" class="form-control" placeholder="請輸入密碼" />
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                <label for="confirmPassword" class="form-label">確認密碼</label>
+                                <input type="password" id="confirmPassword" name="ConfirmPassword" class="form-control" placeholder="請再次輸入密碼" />
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group mb-3">
+                        <div class="form-check">
+                            <input type="checkbox" id="isActive" name="IsActive" value="true" class="form-check-input" checked />
+                            <label for="isActive" class="form-check-label">啟用狀態</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="submit" class="btn btn-primary">儲存</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
+    
+    <script>
+        $(document).ready(function() {
+            // 密碼一致性即時檢查
+            $('#confirmPassword').on('input', function() {
+                var password = $('#password').val();
+                var confirmPassword = $(this).val();
+                var isEditMode = $('#userID').val() !== '0';
+                
+                // 只有在有輸入密碼時才檢查一致性
+                if (password && password.trim() !== '' && confirmPassword && confirmPassword.trim() !== '') {
+                    if (password !== confirmPassword) {
+                        $(this).addClass('is-invalid');
+                        if (!$(this).next('.invalid-feedback').length) {
+                            $(this).after('<div class="invalid-feedback">密碼與確認密碼不一致</div>');
+                        }
+                    } else {
+                        $(this).removeClass('is-invalid');
+                        $(this).next('.invalid-feedback').remove();
+                    }
+                } else {
+                    $(this).removeClass('is-invalid');
+                    $(this).next('.invalid-feedback').remove();
+                }
+            });
+            
+            $('#password').on('input', function() {
+                var password = $(this).val();
+                var confirmPassword = $('#confirmPassword').val();
+                
+                // 只有在有輸入密碼時才檢查一致性
+                if (password && password.trim() !== '' && confirmPassword && confirmPassword.trim() !== '') {
+                    if (password !== confirmPassword) {
+                        $('#confirmPassword').addClass('is-invalid');
+                        if (!$('#confirmPassword').next('.invalid-feedback').length) {
+                            $('#confirmPassword').after('<div class="invalid-feedback">密碼與確認密碼不一致</div>');
+                        }
+                    } else {
+                        $('#confirmPassword').removeClass('is-invalid');
+                        $('#confirmPassword').next('.invalid-feedback').remove();
+                    }
+                } else {
+                    $('#confirmPassword').removeClass('is-invalid');
+                    $('#confirmPassword').next('.invalid-feedback').remove();
+                }
+            });
+            
+            // 表單提交事件
+            $('#userForm').on('submit', function(e) {
+                e.preventDefault();
+                console.log('表單提交事件觸發');
+                
+                // 基本驗證
+                var username = $('#username').val();
+                var displayName = $('#displayName').val();
+                var email = $('#email').val();
+                var password = $('#password').val();
+                
+                if (!username || username.trim() === '') {
+                    toastr.error('請輸入使用者名稱');
+                    return false;
+                }
+                
+                if (!displayName || displayName.trim() === '') {
+                    toastr.error('請輸入顯示名稱');
+                    return false;
+                }
+                
+                if (!email || email.trim() === '') {
+                    toastr.error('請輸入電子信箱');
+                    return false;
+                }
+                
+                // 檢查密碼邏輯
+                var confirmPassword = $('#confirmPassword').val();
+                var isEditMode = $('#userID').val() !== '0';
+                
+                if (isEditMode) {
+                    // 編輯模式：不驗證密碼，密碼欄位留空表示不修改密碼
+                    console.log('編輯模式：跳過密碼驗證');
+                } else {
+                    // 新增模式：密碼為必填
+                    if (!password || password.trim() === '') {
+                        toastr.error('請輸入密碼');
+                        return false;
+                    }
+                    if (password !== confirmPassword) {
+                        toastr.error('密碼與確認密碼不一致，請重新輸入');
+                        return false;
+                    }
+                }
+                
+                console.log('表單驗證通過，準備提交');
+                console.log('密碼長度:', password.length);
+                console.log('確認密碼長度:', confirmPassword.length);
+                
+                // 處理多選角色 - 從 checkbox 獲取選中的角色
+                var selectedRoles = [];
+                $('#roleCheckboxes input[type="checkbox"]:checked').each(function() {
+                    selectedRoles.push($(this).val());
+                });
+                var roleIdValue = selectedRoles.join(',');
+                
+                var url = $(this).attr('action');
+                var formData = $(this).serialize();
+                
+                // 修正 RoleID 的值 - 移除所有 RoleID 參數，然後添加正確的值
+                formData = formData.replace(/RoleID=[^&]*(&|$)/g, '');
+                if (formData.endsWith('&')) {
+                    formData = formData.slice(0, -1);
+                }
+                if (formData) {
+                    formData += '&RoleID=' + encodeURIComponent(roleIdValue);
+                } else {
+                    formData = 'RoleID=' + encodeURIComponent(roleIdValue);
+                }
+                
+                console.log('提交的資料:', formData);
+                console.log('表單欄位檢查:');
+                console.log('- Username:', $('#username').val());
+                console.log('- DisplayName:', $('#displayName').val());
+                console.log('- Email:', $('#email').val());
+                console.log('- RoleID (多選):', roleIdValue);
+                console.log('- Password:', $('#password').val());
+                console.log('- IsActive:', $('#isActive').is(':checked'));
+                
+                // 修正 IsActive 的值 - 確保總是有一個值
+                if ($('#isActive').is(':checked')) {
+                    // 如果選中，確保值為 true
+                    $('input[name="IsActive"]').remove();
+                    $('<input>').attr({
+                        type: 'hidden',
+                        name: 'IsActive',
+                        value: 'true'
+                    }).appendTo('#userForm');
+                } else {
+                    // 如果未選中，值為 false
+                    $('input[name="IsActive"]').remove();
+                    $('<input>').attr({
+                        type: 'hidden',
+                        name: 'IsActive',
+                        value: 'false'
+                    }).appendTo('#userForm');
+                }
+                
+                console.log('準備發送 AJAX 請求');
+                console.log('URL:', url);
+                console.log('FormData:', formData);
+                
+                $.ajax({
+                    url: url,
+                    type: 'POST',
+                    data: formData,
+                    success: function(response) {
+                        console.log('AJAX 成功回應:', response);
+                        if (response.success) {
+                            toastr.success(response.message);
+                            $('#userModal').modal('hide');
+                            location.reload();
+                        } else {
+                            console.log('操作失敗:', response.message);
+                            toastr.error(response.message);
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('AJAX 錯誤詳情:');
+                        console.error('Status:', status);
+                        console.error('Error:', error);
+                        console.error('Response Text:', xhr.responseText);
+                        console.error('Status Code:', xhr.status);
+                        toastr.error('操作失敗，請稍後再試');
+                    }
+                });
+            });
+        });
+
+        function openCreateModal() {
+            console.log('openCreateModal 函數被調用');
+            $('#userModalLabel').text('新增使用者');
+            $('#userForm')[0].reset();
+            $('#userID').val('0');
+            $('#userForm').attr('action', '@Url.Action("Create")');
+            $('#isActive').prop('checked', true);
+            
+            // 顯示密碼欄位
+            $('#passwordFields').show();
+            
+            // 載入角色資料
+            loadRoles();
+            
+            // 清除所有角色 checkbox 選中狀態
+            setTimeout(function() {
+                $('#roleCheckboxes input[type="checkbox"]').prop('checked', false);
+            }, 500);
+            
+            console.log('Modal action set to:', $('#userForm').attr('action'));
+            
+            var modalElement = document.getElementById('userModal');
+            var modal = new bootstrap.Modal(modalElement);
+            modal.show();
+        }
+
+        function openEditModal(id) {
+            console.log('openEditModal 函數被調用，ID:', id);
+            
+            // 先顯示 Modal
+            $('#userModalLabel').text('編輯使用者');
+            $('#userForm').attr('action', '@Url.Action("Edit")');
+            
+            // 隱藏密碼欄位
+            $('#passwordFields').hide();
+            
+            // 載入角色資料
+            loadRoles();
+            
+            // 使用 jQuery 顯示 Modal
+            try {
+                $('#userModal').modal('show');
+                console.log('Modal 顯示指令已執行');
+            } catch (error) {
+                console.error('Modal 顯示失敗:', error);
+            }
+            
+            // 載入使用者資料
+            $.ajax({
+                url: '@Url.Action("GetUser")',
+                type: 'GET',
+                data: { id: id },
+                success: function(response) {
+                    console.log('AJAX 回應:', response);
+                    if (response.success) {
+                        var user = response;
+                        $('#userID').val(user.id);
+                        $('#username').val(user.username || '');
+                        $('#displayName').val(user.displayName || '');
+                        $('#email').val(user.email || '');
+                        
+                        // 處理多選角色 - 設定 checkbox 選中狀態
+                        setTimeout(function() {
+                            // 清除所有選中狀態
+                            $('#roleCheckboxes input[type="checkbox"]').prop('checked', false);
+                            
+                            if (user.roleId && user.roleId !== '') {
+                                var roleIds = user.roleId.split(',');
+                                roleIds.forEach(function(roleId) {
+                                    $('#role_' + roleId.trim()).prop('checked', true);
+                                });
+                            }
+                        }, 500); // 延遲執行，確保 checkbox 已經載入
+                        
+                        $('#isActive').prop('checked', user.isActive);
+                        
+                        console.log('使用者資料載入完成');
+                    } else {
+                        console.error('載入使用者資料失敗:', response.message);
+                        toastr.error(response.message || '載入使用者資料失敗');
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error('AJAX 錯誤:', error);
+                    toastr.error('載入使用者資料時發生錯誤');
+                }
+            });
+        }
+
+        function toggleStatus(id) {
+            $.ajax({
+                url: '@Url.Action("ToggleStatus")',
+                type: 'POST',
+                data: { id: id },
+                success: function(response) {
+                    if (response.success) {
+                        toastr.success(response.message);
+                        location.reload();
+                    } else {
+                        toastr.error(response.message);
+                    }
+                },
+                error: function() {
+                    toastr.error('切換狀態時發生錯誤');
+                }
+            });
+        }
+
+        function loadRoles() {
+            $.ajax({
+                url: '@Url.Action("GetRoles")',
+                type: 'GET',
+                success: function(response) {
+                    if (response.success) {
+                        var roleContainer = $('#roleCheckboxes');
+                        roleContainer.empty();
+                        
+                        $.each(response.roles, function(index, role) {
+                            var checkboxHtml = '<div class="form-check">' +
+                                '<input class="form-check-input" type="checkbox" name="RoleID" value="' + role.roleID + '" id="role_' + role.roleID + '">' +
+                                '<label class="form-check-label" for="role_' + role.roleID + '">' + role.roleName + '</label>' +
+                                '</div>';
+                            roleContainer.append(checkboxHtml);
+                        });
+                        
+                        console.log('角色資料載入完成，共 ' + response.roles.length + ' 個角色');
+                    } else {
+                        console.error('載入角色資料失敗:', response.message);
+                        toastr.error(response.message || '載入角色資料失敗');
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error('AJAX 錯誤:', error);
+                    toastr.error('載入角色資料時發生錯誤');
+                }
+            });
+        }
+
+        function exportToExcel() {
+            // 使用 DataTable 的按鈕功能來匯出 Excel
+            var table = $('#userTable').DataTable();
+            table.button('.buttons-excel').trigger();
+        }
+
+        function changePassword(id) {
+            Swal.fire({
+                title: '變更密碼',
+                text: '確定要為此使用者產生新的 6 位數字密碼嗎？',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: '產生新密碼',
+                cancelButtonText: '取消',
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // 發送 AJAX 請求產生新密碼
+                    $.ajax({
+                        url: '@Url.Action("ChangePassword")',
+                        type: 'POST',
+                        data: { id: id },
+                        success: function(response) {
+                            if (response.success) {
+                                Swal.fire({
+                                    title: '密碼變更成功',
+                                    html: `
+                                        <div class="text-center">
+                                            <p>新密碼已產生並更新</p>
+                                            <div class="alert alert-info mt-3">
+                                                <strong>新密碼：</strong> <span class="font-monospace fs-4">${response.newPassword}</span>
+                                            </div>
+                                            <p class="text-muted">請將此密碼告知使用者，並提醒使用者登入後修改密碼</p>
+                                        </div>
+                                    `,
+                                    icon: 'success',
+                                    confirmButtonText: '確定',
+                                    width: 500
+                                });
+                            } else {
+                                Swal.fire({
+                                    title: '錯誤',
+                                    text: response.message,
+                                    icon: 'error',
+                                    confirmButtonText: '確定'
+                                });
+                            }
+                        },
+                        error: function() {
+                            Swal.fire({
+                                title: '錯誤',
+                                text: '變更密碼時發生錯誤',
+                                icon: 'error',
+                                confirmButtonText: '確定'
+                            });
+                        }
+                    });
+                }
+            });
+        }
+
+        function deleteUser(id) {
+            if (confirm('確定要刪除此使用者嗎？此操作無法復原。')) {
+                $.ajax({
+                    url: '@Url.Action("Delete")',
+                    type: 'POST',
+                    data: { id: id },
+                    success: function(response) {
+                        if (response.success) {
+                            toastr.success(response.message);
+                            location.reload();
+                        } else {
+                            toastr.error(response.message);
+                        }
+                    },
+                    error: function() {
+                        toastr.error('刪除使用者時發生錯誤');
+                    }
+                });
+            }
+        }
+    </script>
+}

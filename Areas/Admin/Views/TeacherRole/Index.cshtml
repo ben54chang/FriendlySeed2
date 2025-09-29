@@ -1,0 +1,260 @@
+@model IEnumerable<FriendlySeed.Models.TeacherRole>
+
+@{
+    ViewData["Title"] = "教師角色管理";
+}
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        @TempData["SuccessMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        @TempData["ErrorMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">
+                    <i class="fas fa-user-tag"></i> 教師角色管理
+                </h3>
+                <div class="card-tools">
+                    <button type="button" class="btn btn-success btn-sm" onclick="exportToExcel()">
+                        <i class="fas fa-file-excel"></i> 匯出 Excel
+                    </button>
+                    <button type="button" class="btn btn-primary btn-sm" onclick="openCreateModal()">
+                        <i class="fas fa-plus"></i> 新增角色
+                    </button>
+                </div>
+            </div>
+            <div class="card-body">
+                <table id="teacherRoleTable" class="table table-bordered table-striped">
+                    <thead>
+                        <tr>
+                            <th>角色名稱</th>
+                            <th>狀態</th>
+                            <th>建立時間</th>
+                            <th>更新時間</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var teacherRole in Model)
+                        {
+                            <tr>
+                                <td>
+                                    <strong>@teacherRole.TeacherRoleName</strong>
+                                </td>
+                                <td>
+                                    <span class="badge @(teacherRole.IsActive ? "badge-success" : "badge-danger")">
+                                        @(teacherRole.IsActive ? "啟用" : "停用")
+                                    </span>
+                                </td>
+                                <td>@(teacherRole.CreatedTime.ToString("yyyy-MM-dd HH:mm"))</td>
+                                <td>@(teacherRole.UpdatedTime.ToString("yyyy-MM-dd HH:mm"))</td>
+                                <td>
+                                    <div class="btn-group" role="group">
+                                        <button type="button" class="btn btn-info btn-sm" onclick="openEditModal(@teacherRole.TeacherRoleID, '@teacherRole.TeacherRoleName', @(teacherRole.IsActive ? "true" : "false"))">
+                                            <i class="fas fa-edit"></i> 編輯
+                                        </button>
+                                        <button type="button" class="btn btn-warning btn-sm" onclick="toggleStatus(@teacherRole.TeacherRoleID)">
+                                            <i class="fas fa-toggle-@(teacherRole.IsActive ? "on" : "off")"></i> 
+                                            @(teacherRole.IsActive ? "停用" : "啟用")
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 新增/編輯 Modal -->
+<div class="modal fade" id="teacherRoleModal" tabindex="-1" aria-labelledby="teacherRoleModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="teacherRoleModalLabel">新增角色</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="teacherRoleForm" method="post" action="@Url.Action("Create")">
+                @Html.AntiForgeryToken()
+                <div class="modal-body">
+                    <input type="hidden" id="teacherRoleID" name="TeacherRoleID" value="0" />
+                    
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                <label for="teacherRoleName" class="form-label">角色名稱 *</label>
+                                <input type="text" id="teacherRoleName" name="TeacherRoleName" class="form-control" placeholder="請輸入教師角色名稱" required />
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                <label class="form-check-label">
+                                    <input type="checkbox" id="isActive" name="IsActive" value="true" checked />
+                                    啟用狀態
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="submit" class="btn btn-primary">儲存</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            // 檢查 DataTable 是否已經初始化
+            if (!$.fn.DataTable.isDataTable('#teacherRoleTable')) {
+                // 初始化 DataTable
+                $('#teacherRoleTable').DataTable({
+                    "responsive": true,
+                    "lengthChange": false,
+                    "autoWidth": false,
+                    "buttons": ["excel", "pdf", "print"],
+                    "language": {
+                        "url": "//cdn.datatables.net/plug-ins/1.10.24/i18n/Chinese-traditional.json"
+                    }
+                }).buttons().container().appendTo('#teacherRoleTable_wrapper .col-md-6:eq(0)');
+            }
+
+            // 表單提交事件
+            $('#teacherRoleForm').on('submit', function(e) {
+                console.log('表單提交事件觸發');
+                
+                // 基本驗證
+                var teacherRoleName = $('#teacherRoleName').val();
+                if (!teacherRoleName || teacherRoleName.trim() === '') {
+                    e.preventDefault();
+                    alert('請輸入角色名稱');
+                    return false;
+                }
+                
+                // 處理 checkbox 的值
+                var isActive = $('#isActive').is(':checked');
+                console.log('IsActive checkbox checked:', isActive);
+                
+                // 如果 checkbox 未選中，添加 hidden input 來確保 false 值被提交
+                if (!isActive) {
+                    $('<input>').attr({
+                        type: 'hidden',
+                        name: 'IsActive',
+                        value: 'false'
+                    }).appendTo('#teacherRoleForm');
+                }
+                
+                console.log('表單驗證通過，準備提交');
+                console.log('表單 action:', $(this).attr('action'));
+                console.log('表單資料:', $(this).serialize());
+                
+                return true;
+            });
+        });
+
+        function toggleStatus(teacherRoleId) {
+            $.ajax({
+                url: '@Url.Action("ToggleStatus")',
+                type: 'POST',
+                data: { id: teacherRoleId },
+                success: function(response) {
+                    if (response.success) {
+                        toastr.success(response.message);
+                        location.reload();
+                    } else {
+                        toastr.error(response.message);
+                    }
+                },
+                error: function() {
+                    toastr.error('操作失敗，請稍後再試');
+                }
+            });
+        }
+
+        function openCreateModal() {
+            console.log('openCreateModal 函數被調用');
+            $('#teacherRoleModalLabel').text('新增角色');
+            $('#teacherRoleForm')[0].reset();
+            $('#teacherRoleID').val('0');
+            $('#teacherRoleForm').attr('action', '@Url.Action("Create")');
+            
+            // 確保 IsActive checkbox 預設為 checked
+            $('#isActive').prop('checked', true);
+            
+            console.log('Modal action set to:', $('#teacherRoleForm').attr('action'));
+            console.log('IsActive set to:', $('#isActive').is(':checked'));
+            
+            // 使用 Bootstrap 5 的方式顯示 Modal
+            var modalElement = document.getElementById('teacherRoleModal');
+            var modal = new bootstrap.Modal(modalElement);
+            modal.show();
+        }
+
+        function openEditModal(teacherRoleId, teacherRoleName, isActive) {
+            console.log('openEditModal 函數被調用');
+            console.log('參數:', {teacherRoleId, teacherRoleName, isActive});
+            
+            $('#teacherRoleModalLabel').text('編輯角色');
+            $('#teacherRoleID').val(teacherRoleId);
+            $('#teacherRoleName').val(teacherRoleName);
+            
+            // 處理 checkbox 的狀態
+            if (isActive === 'true' || isActive === true) {
+                $('#isActive').prop('checked', true);
+            } else {
+                $('#isActive').prop('checked', false);
+            }
+            $('#teacherRoleForm').attr('action', '@Url.Action("Edit")');
+            
+            console.log('Modal action set to:', $('#teacherRoleForm').attr('action'));
+            console.log('TeacherRoleID set to:', $('#teacherRoleID').val());
+            console.log('TeacherRoleName set to:', $('#teacherRoleName').val());
+            console.log('IsActive set to:', $('#isActive').is(':checked'));
+            
+            var teacherRoleModal = new bootstrap.Modal(document.getElementById('teacherRoleModal'));
+            teacherRoleModal.show();
+        }
+
+        function exportToExcel() {
+            // 使用 DataTable 的按鈕功能來匯出 Excel
+            if ($.fn.DataTable.isDataTable('#teacherRoleTable')) {
+                var table = $('#teacherRoleTable').DataTable();
+                table.button('.buttons-excel').trigger();
+            } else {
+                // 如果 DataTable 未初始化，先初始化再匯出
+                var table = $('#teacherRoleTable').DataTable({
+                    "responsive": true,
+                    "lengthChange": false,
+                    "autoWidth": false,
+                    "buttons": ["excel", "pdf", "print"],
+                    "language": {
+                        "url": "//cdn.datatables.net/plug-ins/1.10.24/i18n/Chinese-traditional.json"
+                    }
+                });
+                table.buttons().container().appendTo('#teacherRoleTable_wrapper .col-md-6:eq(0)');
+                table.button('.buttons-excel').trigger();
+            }
+        }
+    </script>
+}

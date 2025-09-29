@@ -1,0 +1,76 @@
+@{
+    var menu = Model.Menu;
+    var allMenus = Model.AllMenus as IEnumerable<FriendlySeed.Models.Menu>;
+    var level = Model.Level;
+    var indentClass = level > 0 ? $"pl-{level * 3}" : "";
+    var childMenus = allMenus.Where(m => m.ParentID == menu.MenuID).OrderBy(m => m.SortOrder).ToList();
+}
+
+<tr data-menu-id="@menu.MenuID" data-parent-id="@(menu.ParentID ?? 0)" data-level="@level" class="menu-row @(level > 0 ? "child-row" : "parent-row")">
+    <td style="padding-left: @(level * 25 + 15)px; position: relative;">
+        @if (level > 0)
+        {
+            <div style="position: absolute; left: @(level * 25 - 10)px; top: 50%; transform: translateY(-50%); width: 20px; height: 1px; background-color: #dee2e6;"></div>
+            <i class="fas fa-angle-right tree-icon"></i>
+        }
+        @if (childMenus.Any())
+        {
+            <i class="fas fa-chevron-down tree-toggle" data-menu-id="@menu.MenuID" style="cursor: pointer; margin-right: 5px;"></i>
+        }
+        else
+        {
+            <span style="margin-right: 20px;"></span>
+        }
+        @if (!string.IsNullOrEmpty(menu.IconUrl))
+        {
+            @if (menu.IconUrl.StartsWith("http"))
+            {
+                <img src="@menu.IconUrl" alt="選單圖示" style="width: 16px; height: 16px; margin-right: 8px;" />
+            }
+            else
+            {
+                <i class="@menu.IconUrl menu-icon"></i>
+            }
+        }
+        else
+        {
+            <i class="fas @(childMenus.Any() ? "fa-folder" : "fa-file") menu-icon"></i>
+        }
+        @if (!string.IsNullOrEmpty(menu.MenuUrl))
+        {
+            <a href="@menu.MenuUrl" class="text-decoration-none">
+                <strong>@menu.MenuName</strong>
+            </a>
+        }
+        else
+        {
+            <strong>@menu.MenuName</strong>
+        }
+    </td>
+    <td>@menu.SortOrder</td>
+    <td>
+        <span class="badge @(menu.IsActive ? "badge-success" : "badge-danger")">
+            @(menu.IsActive ? "啟用" : "停用")
+        </span>
+    </td>
+    <td>@menu.CreatedTime.ToString("yyyy-MM-dd HH:mm")</td>
+    <td>
+        <div class="btn-group" role="group">
+            <button type="button" class="btn btn-info btn-sm" onclick="openEditModal(@menu.MenuID, '@menu.MenuName', @(menu.ParentID ?? 0), @menu.SortOrder, @(menu.IsActive ? "true" : "false"), '@(menu.IconUrl ?? "")', '@(menu.MenuUrl ?? "")')">
+                <i class="fas fa-edit"></i> 編輯
+            </button>
+            <button type="button" class="btn btn-warning btn-sm" onclick="toggleStatus(@menu.MenuID)">
+                <i class="fas fa-toggle-@(menu.IsActive ? "on" : "off")"></i> 
+                @(menu.IsActive ? "停用" : "啟用")
+            </button>
+            <button type="button" class="btn btn-danger btn-sm" onclick="deleteMenu(@menu.MenuID, '@menu.MenuName')">
+                <i class="fas fa-trash"></i> 刪除
+            </button>
+        </div>
+    </td>
+</tr>
+
+@foreach (var childMenu in childMenus)
+{
+    @await Html.PartialAsync("_MenuRow", new { Menu = childMenu, AllMenus = allMenus, Level = level + 1 })
+}

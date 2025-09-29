@@ -1,0 +1,76 @@
+@{
+    ViewData["Title"] = "首頁";
+    var websiteSettings = ViewBag.WebsiteSettings as FriendlySeed.Models.WebsiteSettings;
+}
+
+<!-- Hero Section -->
+<section class="hero-section">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-8">
+                <div class="hero-content text-center">
+                    <h1 class="display-5 fw-bold text-primary mb-3">
+                        @(websiteSettings?.WebsiteName ?? "FriendlySeed")
+                    </h1>
+                    <p class="lead text-muted mb-4">
+                        @(websiteSettings?.MetaDescription ?? "友善種子教育平台，培育未來，成就夢想。")
+                    </p>
+                    <div class="hero-actions">
+                        <a href="~/Admin" class="btn btn-primary me-3" target="_blank">
+                            <i class="fas fa-cog me-2"></i> 管理後台
+                        </a>
+                        <a href="/Admin/Article" class="btn btn-outline-primary">
+                            <i class="fas fa-newspaper me-2"></i> 瀏覽文章
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4">
+                <div class="hero-image text-center">
+                    <i class="fas fa-seedling text-success" style="font-size: 8rem; opacity: 0.2;"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Features Section -->
+<section class="features-section py-5 bg-light">
+    <div class="container">
+        <div class="row">
+            <div class="col-12 text-center mb-5">
+                <h2 class="fw-bold">我們的服務</h2>
+                <p class="text-muted">提供全方位的教育解決方案</p>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-4 mb-4">
+                <div class="feature-card text-center p-4 h-100">
+                    <div class="feature-icon mb-3">
+                        <i class="fas fa-newspaper text-primary" style="font-size: 3rem;"></i>
+                    </div>
+                    <h5 class="fw-bold">文章管理</h5>
+                    <p class="text-muted">豐富的教育文章與學習資源</p>
+                </div>
+            </div>
+            <div class="col-md-4 mb-4">
+                <div class="feature-card text-center p-4 h-100">
+                    <div class="feature-icon mb-3">
+                        <i class="fas fa-chalkboard-teacher text-primary" style="font-size: 3rem;"></i>
+                    </div>
+                    <h5 class="fw-bold">教師管理</h5>
+                    <p class="text-muted">專業師資團隊與教學支援</p>
+                </div>
+            </div>
+            <div class="col-md-4 mb-4">
+                <div class="feature-card text-center p-4 h-100">
+                    <div class="feature-icon mb-3">
+                        <i class="fas fa-users text-primary" style="font-size: 3rem;"></i>
+                    </div>
+                    <h5 class="fw-bold">用戶管理</h5>
+                    <p class="text-muted">完善的用戶權限與角色管理</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

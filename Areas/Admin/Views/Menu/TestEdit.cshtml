@@ -1,0 +1,56 @@
+@model FriendlySeed.Models.Menu
+
+@{
+    ViewData["Title"] = "測試編輯功能";
+}
+
+<div class="container">
+    <h2>測試編輯功能</h2>
+    
+    <form method="post" action="@Url.Action("Edit")">
+        @Html.AntiForgeryToken()
+        
+        <div class="form-group">
+            <label for="MenuID">選單ID (必填)</label>
+            <input type="number" id="MenuID" name="MenuID" class="form-control" required />
+        </div>
+        
+        <div class="form-group">
+            <label for="MenuName">選單名稱</label>
+            <input type="text" id="MenuName" name="MenuName" class="form-control" required />
+        </div>
+        
+        <div class="form-group">
+            <label for="ParentID">父選單ID</label>
+            <input type="number" id="ParentID" name="ParentID" class="form-control" />
+        </div>
+        
+        <div class="form-group">
+            <label for="SortOrder">排序</label>
+            <input type="number" id="SortOrder" name="SortOrder" class="form-control" value="0" />
+        </div>
+        
+        <div class="form-group">
+            <label for="IconUrl">圖示網址</label>
+            <input type="text" id="IconUrl" name="IconUrl" class="form-control" />
+        </div>
+        
+        <div class="form-group">
+            <label for="MenuUrl">選單網址</label>
+            <input type="text" id="MenuUrl" name="MenuUrl" class="form-control" />
+        </div>
+        
+        <div class="form-group">
+            <label>
+                <input type="checkbox" id="IsActive" name="IsActive" value="true" checked />
+                啟用狀態
+            </label>
+        </div>
+        
+        <button type="submit" class="btn btn-primary">更新測試</button>
+    </form>
+    
+    <div class="mt-3">
+        <p><strong>說明：</strong>請輸入要編輯的選單ID，然後修改其他欄位進行測試。</p>
+    </div>
+</div>

@@ -1,0 +1,136 @@
+@model IEnumerable<FriendlySeed.Models.Article>
+@{
+    ViewData["Title"] = "文章列表";
+    var categories = ViewBag.Categories as IEnumerable<FriendlySeed.Models.ArticleCategory>;
+    var selectedCategoryId = ViewBag.SelectedCategoryId as int?;
+    var searchTerm = ViewBag.SearchTerm as string;
+}
+
+<div class="container">
+    <div class="row">
+        <div class="col-lg-3">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-filter"></i> 篩選條件
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <!-- 搜尋表單 -->
+                    <form method="get" class="mb-3">
+                        <div class="input-group">
+                            <input type="text" name="search" class="form-control" placeholder="搜尋文章..." value="@searchTerm">
+                            <button class="btn btn-outline-primary" type="submit">
+                                <i class="fas fa-search"></i>
+                            </button>
+                        </div>
+                    </form>
+
+                    <!-- 分類篩選 -->
+                    <h6 class="text-muted">文章分類</h6>
+                    <div class="list-group list-group-flush">
+                        <a href="@Url.Action("Index")" class="list-group-item list-group-item-action @(selectedCategoryId == null ? "active" : "")">
+                            全部文章
+                        </a>
+                        @if (categories != null)
+                        {
+                            @foreach (var category in categories)
+                            {
+                        <a href="@Url.Action("Index", new { categoryId = category.ArticleCategoryID })" 
+                           class="list-group-item list-group-item-action @(selectedCategoryId == category.ArticleCategoryID ? "active" : "")">
+                            @category.ArticleCategoryName
+                        </a>
+                            }
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-9">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2>
+                    <i class="fas fa-newspaper text-primary"></i> 
+                    @if (selectedCategoryId.HasValue)
+                    {
+                        var category = categories?.FirstOrDefault(c => c.ArticleCategoryID == selectedCategoryId);
+                        <span>@(category?.ArticleCategoryName ?? "文章")</span>
+                    }
+                    else
+                    {
+                        <span>文章列表</span>
+                    }
+                </h2>
+                <span class="badge bg-primary fs-6">@Model.Count() 篇文章</span>
+            </div>
+
+            @if (Model.Any())
+            {
+                <div class="row">
+                    @foreach (var article in Model)
+                    {
+                        <div class="col-md-6 col-lg-4 mb-4">
+                            <div class="card h-100 shadow-sm">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-start mb-2">
+                                        <span class="badge bg-primary">@article.Category?.ArticleCategoryName</span>
+                                        @if (article.IsTop)
+                                        {
+                                            <span class="badge bg-warning">
+                                                <i class="fas fa-star"></i> 置頂
+                                            </span>
+                                        }
+                                    </div>
+                                    <h5 class="card-title">@article.Title</h5>
+                                    <p class="card-text text-muted">
+                                        @(article.Description?.Length > 100 ? article.Description.Substring(0, 100) + "..." : article.Description)
+                                    </p>
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <small class="text-muted">
+                                            <i class="fas fa-user"></i> @article.Author
+                                        </small>
+                                        <small class="text-muted">
+                                            <i class="fas fa-calendar"></i> @article.PublishTime?.ToString("yyyy-MM-dd")
+                                        </small>
+                                    </div>
+                                </div>
+                                <div class="card-footer bg-transparent">
+                                    <a href="@Url.Action("Details", new { id = article.ID })" class="btn btn-outline-primary btn-sm">
+                                        閱讀更多 <i class="fas fa-arrow-right"></i>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+            else
+            {
+                <div class="text-center py-5">
+                    <i class="fas fa-newspaper fa-3x text-muted mb-3"></i>
+                    <h4 class="text-muted">暫無文章</h4>
+                    <p class="text-muted">
+                        @if (!string.IsNullOrEmpty(searchTerm))
+                        {
+                            <span>找不到包含 "@searchTerm" 的文章</span>
+                        }
+                        else if (selectedCategoryId.HasValue)
+                        {
+                            <span>此分類下暫無文章</span>
+                        }
+                        else
+                        {
+                            <span>目前沒有發布的文章，請稍後再來查看。</span>
+                        }
+                    </p>
+                    @if (!string.IsNullOrEmpty(searchTerm) || selectedCategoryId.HasValue)
+                    {
+                        <a href="@Url.Action("Index")" class="btn btn-primary">
+                            <i class="fas fa-refresh"></i> 清除篩選
+                        </a>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+</div>

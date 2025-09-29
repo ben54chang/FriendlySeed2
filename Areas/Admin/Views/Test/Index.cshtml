@@ -1,0 +1,52 @@
+@model FriendlySeed.Models.ArticleCategorySimple
+
+@{
+    ViewData["Title"] = "Test";
+}
+
+<div class="container">
+    <h2>簡化測試頁面</h2>
+    
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success">@TempData["SuccessMessage"]</div>
+    }
+    
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger">@TempData["ErrorMessage"]</div>
+    }
+    
+    <form method="post" action="@Url.Action("Create")">
+        @Html.AntiForgeryToken()
+        
+        <div class="form-group mb-3">
+            <label for="ArticleCategoryName">分類名稱 *</label>
+            <input type="text" id="ArticleCategoryName" name="ArticleCategoryName" class="form-control" value="@Model.ArticleCategoryName" required />
+            <span asp-validation-for="ArticleCategoryName" class="text-danger"></span>
+        </div>
+        
+        <div class="form-group mb-3">
+            <label for="SortOrder">排序</label>
+            <input type="number" id="SortOrder" name="SortOrder" class="form-control" value="@Model.SortOrder" min="0" />
+            <span asp-validation-for="SortOrder" class="text-danger"></span>
+        </div>
+        
+        <div class="form-group mb-3">
+            <label>
+                <input type="checkbox" id="IsActive" name="IsActive" value="true" @(Model.IsActive ? "checked" : "") />
+                啟用狀態
+            </label>
+            <span asp-validation-for="IsActive" class="text-danger"></span>
+        </div>
+        
+        <button type="submit" class="btn btn-primary">測試提交</button>
+    </form>
+    
+    <hr />
+    
+    <h3>表單驗證狀態</h3>
+    <div class="alert alert-info">
+        <p>請填寫表單並提交以查看驗證結果</p>
+    </div>
+</div>

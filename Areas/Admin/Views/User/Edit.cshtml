@@ -1,0 +1,110 @@
+@model FriendlySeed.Models.User
+
+@{
+    ViewData["Title"] = "編輯使用者";
+    var roles = ViewBag.Roles as IEnumerable<FriendlySeed.Models.Role>;
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3 mb-0">編輯使用者</h1>
+    <a asp-action="Index" class="btn btn-secondary">
+        <i class="fas fa-arrow-left"></i> 返回列表
+    </a>
+</div>
+
+<div class="card shadow">
+    <div class="card-body">
+        <form asp-action="Edit" method="post">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <input asp-for="ID" type="hidden" />
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label asp-for="Username" class="form-label">使用者名稱 *</label>
+                        <input asp-for="Username" class="form-control" />
+                        <span asp-validation-for="Username" class="text-danger"></span>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label asp-for="DisplayName" class="form-label">顯示名稱 *</label>
+                        <input asp-for="DisplayName" class="form-control" />
+                        <span asp-validation-for="DisplayName" class="text-danger"></span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label asp-for="Email" class="form-label">電子信箱 *</label>
+                        <input asp-for="Email" type="email" class="form-control" />
+                        <span asp-validation-for="Email" class="text-danger"></span>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label asp-for="RoleID" class="form-label">角色 *</label>
+                        <select asp-for="RoleID" class="form-select">
+                            <option value="">請選擇角色</option>
+                            @if (roles != null)
+                            {
+                                @foreach (var role in roles)
+                                {
+                                    <option value="@role.RoleID" selected="@(Model.RoleID != null && Model.RoleID.Contains(role.RoleID.ToString()))">@role.RoleName</option>
+                                }
+                            }
+                        </select>
+                        <span asp-validation-for="RoleID" class="text-danger"></span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label asp-for="Password" class="form-label">密碼</label>
+                        <input asp-for="Password" type="password" class="form-control" placeholder="留空表示不修改密碼" />
+                        <span asp-validation-for="Password" class="text-danger"></span>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label asp-for="Avatar" class="form-label">頭像</label>
+                        <input asp-for="Avatar" class="form-control" />
+                        <span asp-validation-for="Avatar" class="text-danger"></span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="Description" class="form-label">描述</label>
+                <textarea asp-for="Description" class="form-control" rows="3"></textarea>
+                <span asp-validation-for="Description" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3">
+                <div class="form-check">
+                    <input asp-for="IsActive" class="form-check-input" type="checkbox" />
+                    <label asp-for="IsActive" class="form-check-label">
+                        啟用此使用者
+                    </label>
+                </div>
+            </div>
+
+            <div class="d-flex justify-content-end">
+                <button type="submit" class="btn btn-primary me-2">
+                    <i class="fas fa-save"></i> 更新
+                </button>
+                <a asp-action="Index" class="btn btn-secondary">
+                    <i class="fas fa-times"></i> 取消
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

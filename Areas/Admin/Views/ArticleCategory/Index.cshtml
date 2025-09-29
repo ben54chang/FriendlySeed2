@@ -1,0 +1,271 @@
+@model IEnumerable<FriendlySeed.Models.ArticleCategory>
+
+@{
+    ViewData["Title"] = "文章分類管理";
+}
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        @TempData["SuccessMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        @TempData["ErrorMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">
+                    <i class="fas fa-tags"></i> 文章分類管理
+                </h3>
+                <div class="card-tools">
+                    <button type="button" class="btn btn-success btn-sm" onclick="exportToExcel()">
+                        <i class="fas fa-file-excel"></i> 匯出 Excel
+                    </button>
+                    <button type="button" class="btn btn-primary btn-sm" onclick="openCreateModal()">
+                        <i class="fas fa-plus"></i> 新增分類
+                    </button>
+                </div>
+            </div>
+            <div class="card-body">
+                <table id="categoryTable" class="table table-bordered table-striped">
+                    <thead>
+                        <tr>
+                            <th>分類名稱</th>
+                            <th>關鍵字</th>
+                            <th>描述</th>
+                            <th>排序</th>
+                            <th>狀態</th>
+                            <th>建立時間</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var category in Model)
+                        {
+                            <tr>
+                                <td>
+                                    <strong>@category.ArticleCategoryName</strong>
+                                </td>
+                                <td>@(category.CategoryKeywords ?? "-")</td>
+                                <td>@(category.CategoryDescription ?? "-")</td>
+                                <td>@category.SortOrder</td>
+                                <td>
+                                    <span class="badge @(category.IsActive ? "badge-success" : "badge-danger")">
+                                        @(category.IsActive ? "啟用" : "停用")
+                                    </span>
+                                </td>
+                                <td>@(category.CreatedTime?.ToString("yyyy-MM-dd HH:mm") ?? "N/A")</td>
+                                <td>
+                                    <div class="btn-group" role="group">
+                                        <button type="button" class="btn btn-info btn-sm" onclick="openEditModal(@category.ArticleCategoryID, '@category.ArticleCategoryName', '@(category.CategoryKeywords ?? "")', '@(category.CategoryDescription ?? "")', @category.SortOrder, @(category.IsActive ? "true" : "false"))">
+                                            <i class="fas fa-edit"></i> 編輯
+                                        </button>
+                                        <button type="button" class="btn btn-warning btn-sm" onclick="toggleStatus(@category.ArticleCategoryID)">
+                                            <i class="fas fa-toggle-@(category.IsActive ? "on" : "off")"></i> 
+                                            @(category.IsActive ? "停用" : "啟用")
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 新增/編輯 Modal -->
+<div class="modal fade" id="categoryModal" tabindex="-1" aria-labelledby="categoryModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="categoryModalLabel">新增分類</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="categoryForm" method="post" action="@Url.Action("Create")">
+                @Html.AntiForgeryToken()
+                <div class="modal-body">
+                    <input type="hidden" id="categoryID" name="ArticleCategoryID" value="0" />
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="categoryName" class="form-label">分類名稱 *</label>
+                                <input type="text" id="categoryName" name="ArticleCategoryName" class="form-control" placeholder="請輸入分類名稱" required />
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="sortOrder" class="form-label">排序</label>
+                                <input type="number" id="sortOrder" name="SortOrder" class="form-control" value="10" min="0" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                <label for="categoryKeywords" class="form-label">關鍵字</label>
+                                <input type="text" id="categoryKeywords" name="CategoryKeywords" class="form-control" placeholder="請輸入關鍵字（多個關鍵字請用逗號分隔）" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                <label for="categoryDescription" class="form-label">描述</label>
+                                <textarea id="categoryDescription" name="CategoryDescription" class="form-control" rows="3" placeholder="請輸入分類描述"></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                <label class="form-check-label">
+                                    <input type="checkbox" id="isActive" name="IsActive" value="true" checked />
+                                    啟用狀態
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="submit" class="btn btn-primary">儲存</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            // 表單提交事件 - 使用傳統提交方式
+            $('#categoryForm').on('submit', function(e) {
+                console.log('表單提交事件觸發');
+                
+                // 基本驗證
+                var categoryName = $('#categoryName').val();
+                if (!categoryName || categoryName.trim() === '') {
+                    e.preventDefault();
+                    alert('請輸入分類名稱');
+                    return false;
+                }
+                
+                // 處理 checkbox 的值
+                var isActive = $('#isActive').is(':checked');
+                console.log('IsActive checkbox checked:', isActive);
+                
+                // 確保數值欄位有正確的值
+                var sortOrder = $('#sortOrder').val();
+                if (!sortOrder || sortOrder === '' || sortOrder <= 0) {
+                    $('#sortOrder').val('10');
+                }
+                
+                // 如果 checkbox 未選中，添加 hidden input 來確保 false 值被提交
+                if (!isActive) {
+                    $('<input>').attr({
+                        type: 'hidden',
+                        name: 'IsActive',
+                        value: 'false'
+                    }).appendTo('#categoryForm');
+                }
+                
+                console.log('表單驗證通過，準備提交');
+                console.log('表單 action:', $(this).attr('action'));
+                console.log('表單資料:', $(this).serialize());
+                
+                // 讓表單正常提交，不使用 AJAX
+                return true;
+            });
+        });
+
+        function toggleStatus(categoryId) {
+            $.ajax({
+                url: '@Url.Action("ToggleStatus")',
+                type: 'POST',
+                data: { id: categoryId },
+                success: function(response) {
+                    if (response.success) {
+                        toastr.success(response.message);
+                        location.reload();
+                    } else {
+                        toastr.error(response.message);
+                    }
+                },
+                error: function() {
+                    toastr.error('操作失敗，請稍後再試');
+                }
+            });
+        }
+
+        function openCreateModal() {
+            console.log('openCreateModal 函數被調用');
+            $('#categoryModalLabel').text('新增分類');
+            $('#categoryForm')[0].reset();
+            $('#categoryID').val('0');
+            $('#sortOrder').val('10'); // 確保排序有預設值
+            $('#categoryForm').attr('action', '@Url.Action("Create")');
+            
+            // 確保 IsActive checkbox 預設為 checked
+            $('#isActive').prop('checked', true);
+            
+            console.log('Modal action set to:', $('#categoryForm').attr('action'));
+            console.log('IsActive set to:', $('#isActive').is(':checked'));
+            
+            // 使用 Bootstrap 5 的方式顯示 Modal
+            var modalElement = document.getElementById('categoryModal');
+            var modal = new bootstrap.Modal(modalElement);
+            modal.show();
+        }
+
+        function openEditModal(categoryId, categoryName, categoryKeywords, categoryDescription, sortOrder, isActive) {
+            console.log('openEditModal 函數被調用');
+            console.log('參數:', {categoryId, categoryName, categoryKeywords, categoryDescription, sortOrder, isActive});
+            
+            $('#categoryModalLabel').text('編輯分類');
+            $('#categoryID').val(categoryId);
+            $('#categoryName').val(categoryName);
+            $('#categoryKeywords').val(categoryKeywords || '');
+            $('#categoryDescription').val(categoryDescription || '');
+            $('#sortOrder').val(sortOrder && sortOrder > 0 ? sortOrder : '10');
+            // 處理 checkbox 的狀態
+            if (isActive === 'true' || isActive === true) {
+                $('#isActive').prop('checked', true);
+            } else {
+                $('#isActive').prop('checked', false);
+            }
+            $('#categoryForm').attr('action', '@Url.Action("Edit")');
+            
+            console.log('Modal action set to:', $('#categoryForm').attr('action'));
+            console.log('CategoryID set to:', $('#categoryID').val());
+            console.log('CategoryName set to:', $('#categoryName').val());
+            console.log('IsActive set to:', $('#isActive').is(':checked'));
+            
+            var categoryModal = new bootstrap.Modal(document.getElementById('categoryModal'));
+            categoryModal.show();
+        }
+
+
+        function exportToExcel() {
+            // 使用 DataTable 的按鈕功能來匯出 Excel
+            var table = $('#categoryTable').DataTable();
+            table.button('.buttons-excel').trigger();
+        }
+    </script>
+}

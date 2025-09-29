@@ -1,0 +1,115 @@
+@{
+    ViewData["Title"] = "後台首頁";
+}
+
+<!-- Info boxes -->
+<div class="row">
+    <div class="col-lg-3 col-6">
+        <div class="small-box bg-info">
+            <div class="inner">
+                <h3>@ViewBag.UserCount</h3>
+                <p>使用者總數</p>
+            </div>
+            <div class="icon">
+                <i class="fas fa-users"></i>
+            </div>
+            <a href="@Url.Action("Index", "User", new { area = "Admin" })" class="small-box-footer">
+                更多資訊 <i class="fas fa-arrow-circle-right"></i>
+            </a>
+        </div>
+    </div>
+    <div class="col-lg-3 col-6">
+        <div class="small-box bg-success">
+            <div class="inner">
+                <h3>@ViewBag.TeacherCount</h3>
+                <p>教師總數</p>
+            </div>
+            <div class="icon">
+                <i class="fas fa-chalkboard-teacher"></i>
+            </div>
+            <a href="@Url.Action("Index", "Teacher", new { area = "Admin" })" class="small-box-footer">
+                更多資訊 <i class="fas fa-arrow-circle-right"></i>
+            </a>
+        </div>
+    </div>
+    <div class="col-lg-3 col-6">
+        <div class="small-box bg-warning">
+            <div class="inner">
+                <h3>@ViewBag.ArticleCount</h3>
+                <p>文章總數</p>
+            </div>
+            <div class="icon">
+                <i class="fas fa-newspaper"></i>
+            </div>
+            <a href="@Url.Action("Index", "Article", new { area = "Admin" })" class="small-box-footer">
+                更多資訊 <i class="fas fa-arrow-circle-right"></i>
+            </a>
+        </div>
+    </div>
+    <div class="col-lg-3 col-6">
+        <div class="small-box bg-danger">
+            <div class="inner">
+                <h3>正常</h3>
+                <p>系統狀態</p>
+            </div>
+            <div class="icon">
+                <i class="fas fa-check-circle"></i>
+            </div>
+            <a href="#" class="small-box-footer">
+                系統正常 <i class="fas fa-arrow-circle-right"></i>
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">快速操作</h3>
+            </div>
+            <div class="card-body">
+                <div class="list-group list-group-flush">
+                    <a href="@Url.Action("Create", "User", new { area = "Admin" })" class="list-group-item list-group-item-action">
+                        <i class="fas fa-user-plus text-primary"></i> 新增使用者
+                    </a>
+                    <a href="@Url.Action("Create", "Teacher", new { area = "Admin" })" class="list-group-item list-group-item-action">
+                        <i class="fas fa-chalkboard-teacher text-success"></i> 新增教師
+                    </a>
+                    <a href="@Url.Action("Create", "Article", new { area = "Admin" })" class="list-group-item list-group-item-action">
+                        <i class="fas fa-plus text-info"></i> 新增文章
+                    </a>
+                    <a href="@Url.Action("Index", "WebsiteSettings", new { area = "Admin" })" class="list-group-item list-group-item-action">
+                        <i class="fas fa-cog text-warning"></i> 網站設定
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">系統資訊</h3>
+            </div>
+            <div class="card-body">
+                <dl class="row">
+                    <dt class="col-sm-4">系統版本：</dt>
+                    <dd class="col-sm-8">FriendlySeed v1.0.0</dd>
+                    
+                    <dt class="col-sm-4">資料庫：</dt>
+                    <dd class="col-sm-8">Microsoft SQL Server</dd>
+                    
+                    <dt class="col-sm-4">框架：</dt>
+                    <dd class="col-sm-8">.NET 8.0 MVC</dd>
+                    
+                    <dt class="col-sm-4">ORM：</dt>
+                    <dd class="col-sm-8">Dapper</dd>
+                    
+                    <dt class="col-sm-4">前端：</dt>
+                    <dd class="col-sm-8">LTEAdmin, jQuery, DataTables</dd>
+                </dl>
+            </div>
+        </div>
+    </div>
+</div>

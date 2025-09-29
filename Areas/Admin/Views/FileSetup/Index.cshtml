@@ -1,0 +1,389 @@
+@{
+    ViewData["Title"] = "檔案總管";
+}
+
+<!-- Hidden form to host anti-forgery token for AJAX -->
+<form id="af-host" method="post" class="d-none">
+    @Html.AntiForgeryToken()
+</form>
+
+<div class="container-fluid py-3">
+    <div class="row">
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-header">目錄</div>
+                <div class="card-body" style="height:70vh; overflow:auto;">
+                    <ul id="tree" class="list-unstyled mb-0"></ul>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-9">
+            <div class="card">
+                <div class="card-header d-flex align-items-center justify-content-between">
+                    <div>
+                        <strong>內容</strong>
+                        <span id="currentPath" class="text-muted ms-2">/</span>
+                    </div>
+                    <div class="btn-group">
+                        <button id="btnNewFolder" class="btn btn-sm btn-outline-primary">新資料夾</button>
+                        <button id="btnNewFile" class="btn btn-sm btn-outline-secondary">新檔案</button>
+                        <label class="btn btn-sm btn-outline-success mb-0">
+                            上傳 <input id="fileUpload" type="file" hidden />
+                        </label>
+                        <button id="btnRefresh" class="btn btn-sm btn-outline-info">重新整理</button>
+                    </div>
+                </div>
+                <div class="card-body" style="height:70vh; overflow:auto;">
+                    <table class="table table-hover align-middle" id="listTable">
+                        <thead>
+                            <tr>
+                                <th style="width:40px;"></th>
+                                <th>名稱</th>
+                                <th>大小</th>
+                                <th>修改時間</th>
+                                <th style="width:260px;">操作</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Preview Modal -->
+<div class="modal fade" id="previewModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-xl modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">預覽</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="關閉"></button>
+      </div>
+      <div class="modal-body">
+        <div id="previewImage" class="d-none text-center"></div>
+        <pre id="previewText" class="d-none" style="white-space: pre-wrap;"></pre>
+        <div id="previewUnsupported" class="d-none">此檔案不支援預覽。</div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">關閉</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+@section Scripts {
+<script>
+    const originBase = '@(Context.Request.Scheme)://@(Context.Request.Host)';
+    const endpoints = {
+        tree: originBase + '@Url.Action("Tree", "FileSetup", new { area = "Admin" })',
+        list: originBase + '@Url.Action("List", "FileSetup", new { area = "Admin" })',
+        createFolder: originBase + '@Url.Action("CreateFolder", "FileSetup", new { area = "Admin" })',
+        createFile: originBase + '@Url.Action("CreateFile", "FileSetup", new { area = "Admin" })',
+        upload: originBase + '@Url.Action("Upload", "FileSetup", new { area = "Admin" })',
+        delete: originBase + '@Url.Action("Delete", "FileSetup", new { area = "Admin" })',
+        download: originBase + '@Url.Action("Download", "FileSetup", new { area = "Admin" })',
+        preview: originBase + '@Url.Action("Preview", "FileSetup", new { area = "Admin" })',
+        rename: originBase + '@Url.Action("Rename", "FileSetup", new { area = "Admin" })',
+        move: originBase + '@Url.Action("Move", "FileSetup", new { area = "Admin" })',
+        copy: originBase + '@Url.Action("Copy", "FileSetup", new { area = "Admin" })'
+    };
+
+    let currentPath = '';
+
+    function getToken() {
+        const el = document.querySelector('#af-host input[name="__RequestVerificationToken"]');
+        return el ? el.value : '';
+    }
+
+    async function httpGet(url, params) {
+        const qs = params ? ('?' + new URLSearchParams(params)) : '';
+        const full = url + qs;
+        console.debug('GET', full);
+        const res = await fetch(full, { credentials: 'same-origin', cache: 'no-store' });
+        if (!res.ok) throw new Error('HTTP ' + res.status + ' ' + full);
+        return await res.json();
+    }
+
+    async function httpPost(url, formObj) {
+        const fd = new FormData();
+        Object.keys(formObj || {}).forEach(k => {
+            if (formObj[k] !== undefined && formObj[k] !== null) fd.append(k, formObj[k]);
+        });
+        fd.append('__RequestVerificationToken', getToken());
+        console.debug('POST', url, Object.keys(formObj||{}));
+        const res = await fetch(url, { method: 'POST', credentials: 'same-origin', body: fd, cache: 'no-store' });
+        if (!res.ok) throw new Error('HTTP ' + res.status + ' ' + url);
+        return await res.json();
+    }
+
+    function initTooltips() {
+        $('[data-bs-toggle="tooltip"]').tooltip();
+    }
+
+    function humanSize(bytes) {
+        if (bytes === null || bytes === undefined) return '';
+        const units = ['B','KB','MB','GB','TB'];
+        let i = 0; let n = parseFloat(bytes);
+        while (n >= 1024 && i < units.length - 1) { n /= 1024; i++; }
+        return n.toFixed(1) + ' ' + units[i];
+    }
+
+    function actionButtons(item) {
+        const isDir = item.type === 'directory';
+        const path = encodeURIComponent(item.path);
+        return (
+            '<div class="btn-group btn-group-sm">' +
+            (isDir ? '' : `<a class="btn btn-outline-primary" href="${endpoints.download}?path=${path}" data-bs-toggle="tooltip" title="下載"><i class="fas fa-download"></i></a>`) +
+            (isDir ? '' : `<button class="btn btn-outline-secondary btn-preview" data-path="${item.path}" data-bs-toggle="tooltip" title="預覽"><i class="fas fa-eye"></i></button>`) +
+            `<button class="btn btn-outline-dark btn-rename" data-path="${item.path}" data-bs-toggle="tooltip" title="重新命名"><i class="fas fa-i-cursor"></i></button>` +
+            `<button class="btn btn-outline-warning btn-move" data-path="${item.path}" data-bs-toggle="tooltip" title="搬移"><i class="fas fa-arrows-alt"></i></button>` +
+            `<button class="btn btn-outline-success btn-copy" data-path="${item.path}" data-bs-toggle="tooltip" title="複製"><i class="fas fa-copy"></i></button>` +
+            `<button class="btn btn-outline-danger btn-del" data-path="${item.path}" data-type="${item.type}" data-bs-toggle="tooltip" title="刪除"><i class="fas fa-trash"></i></button>` +
+            '</div>'
+        );
+    }
+
+    async function refreshList() {
+        try {
+            const res = await httpGet(endpoints.list, { path: currentPath });
+            if (!res.success) { alert(res.message || '讀取失敗'); return; }
+            const tbody = document.querySelector('#listTable tbody');
+            tbody.innerHTML = '';
+            const rows = [];
+            (res.directories || []).forEach(d => {
+                rows.push(
+                    `<tr data-path="${d.path}" data-type="dir">` +
+                    `<td><i class="fas fa-folder text-warning"></i></td>` +
+                    `<td class="item-name">${d.name}</td>` +
+                    `<td></td>` +
+                    `<td>${new Date(d.modified).toLocaleString()}</td>` +
+                    `<td>${actionButtons({ ...d, type: 'directory' })}</td>` +
+                    `</tr>`
+                );
+            });
+            (res.files || []).forEach(f => {
+                rows.push(
+                    `<tr data-path="${f.path}" data-type="file">` +
+                    `<td><i class="fas fa-file text-secondary"></i></td>` +
+                    `<td class="item-name">${f.name}</td>` +
+                    `<td>${humanSize(f.size)}</td>` +
+                    `<td>${new Date(f.modified).toLocaleString()}</td>` +
+                    `<td>${actionButtons({ ...f, type: 'file' })}</td>` +
+                    `</tr>`
+                );
+            });
+            tbody.innerHTML = rows.join('');
+            initTooltips();
+        } catch (e) {
+            console.error(e);
+            alert('載入清單失敗');
+        }
+    }
+
+    function createNodeElement(node) {
+        const li = document.createElement('li');
+        li.className = 'mb-1';
+        li.dataset.id = node.id;
+
+        const row = document.createElement('div');
+        row.className = 'd-flex align-items-center';
+
+        const toggle = document.createElement('button');
+        toggle.type = 'button';
+        toggle.className = 'btn btn-sm btn-link text-decoration-none px-1';
+        toggle.textContent = '▸';
+        if (!node.children) toggle.classList.add('invisible');
+
+        const icon = document.createElement('i');
+        icon.className = 'fas fa-folder text-warning me-2';
+
+        const text = document.createElement('span');
+        text.className = 'node-text';
+        text.textContent = node.text;
+
+        const childrenUl = document.createElement('ul');
+        childrenUl.className = 'list-unstyled ms-4 mt-1 d-none';
+
+        toggle.addEventListener('click', async () => {
+            if (childrenUl.classList.contains('d-none')) {
+                if (!childrenUl.dataset.loaded) {
+                    const id = li.dataset.id;
+                    try {
+                        const list = await httpGet(endpoints.tree, { id: id || '#' });
+                        list.forEach(child => {
+                            childrenUl.appendChild(createNodeElement(child));
+                        });
+                        childrenUl.dataset.loaded = '1';
+                    } catch {}
+                }
+                childrenUl.classList.remove('d-none');
+                toggle.textContent = '▾';
+            } else {
+                childrenUl.classList.add('d-none');
+                toggle.textContent = '▸';
+            }
+        });
+
+        text.addEventListener('click', () => {
+            const id = li.dataset.id || '';
+            currentPath = id;
+            document.getElementById('currentPath').textContent = '/' + currentPath;
+            refreshList();
+        });
+
+        row.appendChild(toggle);
+        row.appendChild(icon);
+        row.appendChild(text);
+        li.appendChild(row);
+        li.appendChild(childrenUl);
+        return li;
+    }
+
+    async function loadRoot() {
+        const tree = document.getElementById('tree');
+        tree.innerHTML = '';
+        try {
+            const list = await httpGet(endpoints.tree, { id: '#' });
+            list.forEach(node => tree.appendChild(createNodeElement(node)));
+        } catch (e) {
+            console.error(e);
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        loadRoot();
+
+        document.getElementById('btnNewFolder').addEventListener('click', async () => {
+            const name = prompt('請輸入資料夾名稱');
+            if (!name) return;
+            const res = await httpPost(endpoints.createFolder, { path: currentPath, name });
+            if (!res.success) return alert(res.message || '建立失敗');
+            await loadRoot();
+            await refreshList();
+        });
+
+        document.getElementById('btnNewFile').addEventListener('click', async () => {
+            const name = prompt('請輸入檔案名稱(含副檔名)');
+            if (!name) return;
+            const res = await httpPost(endpoints.createFile, { path: currentPath, name });
+            if (!res.success) return alert(res.message || '建立失敗');
+            await refreshList();
+        });
+
+        document.getElementById('fileUpload').addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            const fd = new FormData();
+            fd.append('path', currentPath);
+            fd.append('file', file);
+            fd.append('__RequestVerificationToken', getToken());
+            const res = await fetch(endpoints.upload, { method: 'POST', body: fd, credentials: 'same-origin' });
+            if (!res.ok) { alert('上傳失敗'); return; }
+            const j = await res.json();
+            if (!j.success) return alert(j.message || '上傳失敗');
+            await refreshList();
+            e.target.value = '';
+        });
+
+        document.getElementById('listTable').addEventListener('click', async (e) => {
+            const btn = e.target.closest('button');
+            if (!btn) return;
+            const path = btn.getAttribute('data-path') || btn.closest('tr')?.getAttribute('data-path');
+            if (!path) return;
+
+            if (btn.classList.contains('btn-preview')) {
+                try {
+                    // 先嘗試獲取預覽信息
+                    const response = await fetch(`${endpoints.preview}?path=${encodeURIComponent(path)}`, {
+                        credentials: 'same-origin',
+                        cache: 'no-store'
+                    });
+                    
+                    const img = document.getElementById('previewImage');
+                    const txt = document.getElementById('previewText');
+                    const uns = document.getElementById('previewUnsupported');
+                    img.classList.add('d-none'); img.innerHTML='';
+                    txt.classList.add('d-none'); txt.textContent='';
+                    uns.classList.add('d-none');
+                    
+                    const contentType = response.headers.get('content-type') || '';
+                    
+                    if (contentType.startsWith('image/')) {
+                        // 圖片檔案，直接顯示
+                        img.innerHTML = `<img class="img-fluid" src="${endpoints.preview}?path=${encodeURIComponent(path)}" />`;
+                        img.classList.remove('d-none');
+                    } else if (contentType.includes('application/json')) {
+                        // JSON 回應，解析內容
+                        const res = await response.json();
+                        if (!res.success) { 
+                            alert(res.message || '預覽失敗'); 
+                            return; 
+                        }
+                        if (res.kind === 'text' && res.content !== undefined) {
+                            txt.textContent = res.content; 
+                            txt.classList.remove('d-none');
+                        } else {
+                            uns.classList.remove('d-none');
+                        }
+                    } else {
+                        // 其他類型，顯示不支援
+                        uns.classList.remove('d-none');
+                    }
+                    
+                    $('#previewModal').modal('show');
+                } catch (error) {
+                    console.error('預覽失敗:', error);
+                    alert('預覽失敗: ' + error.message);
+                }
+                return;
+            }
+
+            if (btn.classList.contains('btn-rename')) {
+                const newName = prompt('請輸入新名稱');
+                if (!newName) return;
+                const r = await httpPost(endpoints.rename, { path, newName });
+                if (!r.success) return alert(r.message || '重新命名失敗');
+                await loadRoot();
+                await refreshList();
+                return;
+            }
+
+            if (btn.classList.contains('btn-move')) {
+                const target = prompt('請輸入目的目錄相對路徑（例如：sub1/sub2）');
+                if (target === null) return;
+                const r = await httpPost(endpoints.move, { sourcePath: path, targetDir: target });
+                if (!r.success) return alert(r.message || '搬移失敗');
+                await loadRoot();
+                await refreshList();
+                return;
+            }
+
+            if (btn.classList.contains('btn-copy')) {
+                const target = prompt('請輸入目的目錄相對路徑（例如：sub1/sub2）');
+                if (target === null) return;
+                const r = await httpPost(endpoints.copy, { sourcePath: path, targetDir: target });
+                if (!r.success) return alert(r.message || '複製失敗');
+                await loadRoot();
+                await refreshList();
+                return;
+            }
+
+            if (btn.classList.contains('btn-del')) {
+                if (!confirm('確定要刪除嗎？')) return;
+                const isDirectory = (btn.getAttribute('data-type') || btn.closest('tr')?.getAttribute('data-type')) === 'dir';
+                const r = await httpPost(endpoints.delete, { path, isDirectory });
+                if (!r.success) return alert(r.message || '刪除失敗');
+                await loadRoot();
+                await refreshList();
+                return;
+            }
+        });
+
+        document.getElementById('btnRefresh').addEventListener('click', async () => {
+            await loadRoot();
+            await refreshList();
+        });
+    });
+</script>
+}

@@ -1,0 +1,69 @@
+@{
+    ViewData["Title"] = "Test Simple";
+}
+
+<div class="container">
+    <h2>最簡單的測試頁面</h2>
+    
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success">@TempData["SuccessMessage"]</div>
+    }
+    
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger">@TempData["ErrorMessage"]</div>
+    }
+    
+    <form method="post" action="@Url.Action("Create")">
+        @Html.AntiForgeryToken()
+        
+        <div class="form-group mb-3">
+            <label for="ArticleCategoryName">分類名稱 *</label>
+            <input type="text" id="ArticleCategoryName" name="ArticleCategoryName" class="form-control" required />
+        </div>
+        
+        <div class="form-group mb-3">
+            <label for="SortOrder">排序</label>
+            <input type="number" id="SortOrder" name="SortOrder" class="form-control" value="10" min="0" />
+        </div>
+        
+        <div class="form-group mb-3">
+            <label>
+                <input type="checkbox" id="IsActive" name="IsActive" value="true" checked />
+                啟用狀態
+            </label>
+        </div>
+        
+        <button type="submit" class="btn btn-primary">測試提交</button>
+    </form>
+    
+    <hr />
+    
+    <h3>表單數據預覽</h3>
+    <div class="alert alert-info">
+        <p><strong>ArticleCategoryName:</strong> <span id="nameValue"></span></p>
+        <p><strong>SortOrder:</strong> <span id="sortValue"></span></p>
+        <p><strong>IsActive:</strong> <span id="activeValue"></span></p>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const nameInput = document.getElementById('ArticleCategoryName');
+    const sortInput = document.getElementById('SortOrder');
+    const activeInput = document.getElementById('IsActive');
+    
+    function updateDisplay() {
+        document.getElementById('nameValue').textContent = nameInput.value || '(空)';
+        document.getElementById('sortValue').textContent = sortInput.value || '(空)';
+        document.getElementById('activeValue').textContent = activeInput.checked ? 'true' : 'false';
+    }
+    
+    nameInput.addEventListener('input', updateDisplay);
+    sortInput.addEventListener('input', updateDisplay);
+    activeInput.addEventListener('change', updateDisplay);
+    
+    updateDisplay();
+});
+</script>

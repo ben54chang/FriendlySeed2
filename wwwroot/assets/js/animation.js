@@ -1,0 +1,1 @@
+document.addEventListener("DOMContentLoaded",(function(){var e=document.querySelector(".cutscene1"),n=document.querySelector(".transitions-img");e.addEventListener("animationend",(function(e){"SlideOutRight"===e.animationName&&n.classList.add("hide")}))}));

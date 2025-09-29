@@ -1,0 +1,40 @@
+@{
+    ViewData["Title"] = "Basic Test";
+}
+
+<div class="container">
+    <h2>基本測試頁面</h2>
+    
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success">@TempData["SuccessMessage"]</div>
+    }
+    
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger">@TempData["ErrorMessage"]</div>
+    }
+    
+    <form method="post" action="@Url.Action("Create")">
+        @Html.AntiForgeryToken()
+        
+        <div class="form-group mb-3">
+            <label for="ArticleCategoryName">分類名稱 *</label>
+            <input type="text" id="ArticleCategoryName" name="ArticleCategoryName" class="form-control" required />
+        </div>
+        
+        <div class="form-group mb-3">
+            <label for="SortOrder">排序</label>
+            <input type="number" id="SortOrder" name="SortOrder" class="form-control" value="10" min="0" />
+        </div>
+        
+        <div class="form-group mb-3">
+            <label>
+                <input type="checkbox" id="IsActive" name="IsActive" value="true" checked />
+                啟用狀態
+            </label>
+        </div>
+        
+        <button type="submit" class="btn btn-primary">測試提交</button>
+    </form>
+</div>

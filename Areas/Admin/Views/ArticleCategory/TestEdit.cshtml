@@ -1,0 +1,51 @@
+@model FriendlySeed.Models.ArticleCategory
+
+@{
+    ViewData["Title"] = "測試編輯功能";
+}
+
+<div class="container">
+    <h2>測試編輯功能</h2>
+    
+    <form method="post" action="@Url.Action("Edit")">
+        @Html.AntiForgeryToken()
+        
+        <div class="form-group">
+            <label for="ArticleCategoryID">分類ID (必填)</label>
+            <input type="number" id="ArticleCategoryID" name="ArticleCategoryID" class="form-control" required />
+        </div>
+        
+        <div class="form-group">
+            <label for="ArticleCategoryName">分類名稱</label>
+            <input type="text" id="ArticleCategoryName" name="ArticleCategoryName" class="form-control" required />
+        </div>
+        
+        <div class="form-group">
+            <label for="CategoryKeywords">關鍵字</label>
+            <input type="text" id="CategoryKeywords" name="CategoryKeywords" class="form-control" />
+        </div>
+        
+        <div class="form-group">
+            <label for="CategoryDescription">描述</label>
+            <textarea id="CategoryDescription" name="CategoryDescription" class="form-control" rows="3"></textarea>
+        </div>
+        
+        <div class="form-group">
+            <label for="SortOrder">排序</label>
+            <input type="number" id="SortOrder" name="SortOrder" class="form-control" value="10" min="0" />
+        </div>
+        
+        <div class="form-group">
+            <label>
+                <input type="checkbox" id="IsActive" name="IsActive" value="true" checked />
+                啟用狀態
+            </label>
+        </div>
+        
+        <button type="submit" class="btn btn-primary">更新測試</button>
+    </form>
+    
+    <div class="mt-3">
+        <p><strong>說明：</strong>請輸入要編輯的分類ID，然後修改其他欄位進行測試。</p>
+    </div>
+</div>

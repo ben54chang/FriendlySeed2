@@ -1,0 +1,51 @@
+@model IEnumerable<FriendlySeed.Models.Menu>
+
+@if (Model != null && Model.Any())
+{
+    <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
+        @foreach (var menu in Model)
+        {
+            <li class="nav-item @(menu.Children != null && menu.Children.Any() ? "has-treeview" : "")" data-menu-id="@menu.MenuID">
+                @if (menu.Children != null && menu.Children.Any())
+                {
+                    <a href="#" class="nav-link" data-toggle="collapse" data-target="#menu-@menu.MenuID">
+                        <i class="nav-icon @(string.IsNullOrEmpty(menu.IconUrl) ? "fas fa-folder" : menu.IconUrl)"></i>
+                        <p>
+                            @menu.MenuName
+                            <i class="right fas fa-angle-left"></i>
+                        </p>
+                    </a>
+                    <ul class="nav nav-treeview" id="menu-@menu.MenuID">
+                        @foreach (var child in menu.Children.OrderBy(c => c.SortOrder))
+                        {
+                            <li class="nav-item">
+                                <a href="@(string.IsNullOrEmpty(child.MenuUrl) ? "#" : child.MenuUrl)" class="nav-link">
+                                    <i class="far fa-circle nav-icon"></i>
+                                    <p>@child.MenuName</p>
+                                </a>
+                            </li>
+                        }
+                    </ul>
+                }
+                else
+                {
+                    <a href="@(string.IsNullOrEmpty(menu.MenuUrl) ? "#" : menu.MenuUrl)" class="nav-link">
+                        <i class="nav-icon @(string.IsNullOrEmpty(menu.IconUrl) ? "fas fa-file" : menu.IconUrl)"></i>
+                        <p>@menu.MenuName</p>
+                    </a>
+                }
+            </li>
+        }
+    </ul>
+}
+else
+{
+    <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
+        <li class="nav-item">
+            <a href="#" class="nav-link">
+                <i class="nav-icon fas fa-exclamation-triangle"></i>
+                <p>沒有菜單資料</p>
+            </a>
+        </li>
+    </ul>
+}

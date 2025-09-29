@@ -1,0 +1,475 @@
+@model IEnumerable<FriendlySeed.Models.Article>
+@using System.Web
+
+@{
+    ViewData["Title"] = "文章管理";
+}
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        @TempData["SuccessMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        @TempData["ErrorMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">
+                    <i class="fas fa-newspaper"></i> 文章管理
+                </h3>
+                <div class="card-tools">
+                    <button type="button" class="btn btn-success btn-sm" onclick="exportToExcel()">
+                        <i class="fas fa-file-excel"></i> 匯出 Excel
+                    </button>
+                    <button type="button" class="btn btn-primary btn-sm" onclick="openCreateModal()">
+                        <i class="fas fa-plus"></i> 新增文章
+                    </button>
+                </div>
+            </div>
+            <div class="card-body">
+                <table id="articleTable" class="table table-bordered table-striped">
+                    <thead>
+                        <tr>
+                            <th>標題</th>
+                            <th>作者</th>
+                            <th>分類</th>
+                            <th>發布時間</th>
+                            <th>置頂</th>
+                            <th>狀態</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var article in Model)
+                        {
+                            <tr>
+                                <td>
+                                    <strong>@Html.Raw(System.Web.HttpUtility.HtmlDecode(article.Title))</strong>
+                                    @if (!string.IsNullOrEmpty(article.Alias))
+                                    {
+                                        <br><small class="text-muted">@article.Alias</small>
+                                    }
+                                </td>
+                                <td>@article.Author</td>
+                                <td>
+                                    <span class="badge bg-primary">@article.Category?.ArticleCategoryName</span>
+                                </td>
+                                <td>@(article.PublishTime?.ToString("yyyy-MM-dd HH:mm") ?? "未發布")</td>
+                                <td>
+                                    @if (article.IsTop)
+                                    {
+                                        <span class="badge bg-warning">
+                                            <i class="fas fa-star"></i> 置頂
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-secondary">一般</span>
+                                    }
+                                </td>
+                                <td>
+                                    <span class="badge @(article.IsActive ? "badge-success" : "badge-danger")">
+                                        @(article.IsActive ? "啟用" : "停用")
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="btn-group" role="group">
+                                        <button type="button" class="btn btn-info btn-sm" onclick="openEditModal(@article.ID)">
+                                            <i class="fas fa-edit"></i> 編輯
+                                        </button>
+                                        <button type="button" class="btn btn-warning btn-sm" onclick="toggleStatus(@article.ID)">
+                                            <i class="fas fa-toggle-@(article.IsActive ? "on" : "off")"></i> 
+                                            @(article.IsActive ? "停用" : "啟用")
+                                        </button>
+                                        <button type="button" class="btn btn-danger btn-sm" onclick="deleteArticle(@article.ID, '@Html.Raw(System.Web.HttpUtility.JavaScriptStringEncode(article.Title))')">
+                                            <i class="fas fa-trash"></i> 刪除
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 新增/編輯 Modal -->
+<div class="modal fade" id="articleModal" tabindex="-1" aria-labelledby="articleModalLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="articleModalLabel">新增文章</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="關閉"></button>
+            </div>
+            <form id="articleForm" method="post" action="@Url.Action("Create")" enctype="multipart/form-data">
+                @Html.AntiForgeryToken()
+                <div class="modal-body">
+                    <input type="hidden" id="articleID" name="ID" value="0" />
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                <label for="title" class="form-label">標題 *</label>
+                                <input type="text" id="title" name="Title" class="form-control" placeholder="請輸入文章標題" required />
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                <label for="alias" class="form-label">代稱</label>
+                                <input type="text" id="alias" name="Alias" class="form-control" placeholder="請輸入文章代稱" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                <label for="author" class="form-label">作者 *</label>
+                                <input type="text" id="author" name="Author" class="form-control" placeholder="請輸入作者名稱" required />
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                <label for="categoryID" class="form-label">分類 *</label>
+                                <select id="categoryID" name="CategoryID" class="form-control" required>
+                                    <option value="">請選擇分類</option>
+                                    @foreach (var category in ViewBag.Categories as IEnumerable<FriendlySeed.Models.ArticleCategory>)
+                                    {
+                                        <option value="@category.ArticleCategoryID">@category.ArticleCategoryName</option>
+                                    }
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                <label for="keywords" class="form-label">關鍵字</label>
+                                <input type="text" id="keywords" name="Keywords" class="form-control" placeholder="請輸入關鍵字（多個關鍵字請用逗號分隔）" />
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                <label for="sortOrder" class="form-label">排序</label>
+                                <input type="number" id="sortOrder" name="SortOrder" class="form-control" value="0" min="0" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group mb-3">
+                        <label for="description" class="form-label">內容</label>
+                        <textarea id="description" name="Description" class="form-control summernote" rows="10" placeholder="請輸入文章內容"></textarea>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                <label for="fileUpload" class="form-label">檔案上傳</label>
+                                <input type="file" id="fileUpload" class="form-control" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.gif" />
+                                <input type="hidden" id="filePath" name="FilePath" />
+                                <div id="filePreview" class="mt-2" style="display: none;">
+                                    <small class="text-muted">已選擇檔案: <span id="fileName"></span></small>
+                                    <button type="button" class="btn btn-sm btn-outline-danger ms-2" onclick="clearFile()">移除</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                <label for="publishTime" class="form-label">發布時間</label>
+                                <input type="datetime-local" id="publishTime" name="PublishTime" class="form-control" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                <label class="form-check-label">
+                                    <input type="checkbox" id="isTop" name="IsTop" value="true" />
+                                    置頂文章
+                                </label>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                <label class="form-check-label">
+                                    <input type="checkbox" id="isActive" name="IsActive" value="true" checked />
+                                    啟用狀態
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="submit" class="btn btn-primary">儲存</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <link href="https://cdn.jsdelivr.net/npm/summernote@0.8.20/dist/summernote-bs4.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/summernote@0.8.20/dist/summernote-bs4.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
+    
+    <script>
+        $(document).ready(function() {
+            // DataTable 由 admin.js 自動初始化，這裡不需要手動初始化
+
+            // 初始化 SummerNote
+            $('.summernote').summernote({
+                height: 300,
+                lang: 'zh-TW',
+                toolbar: [
+                    ['style', ['style']],
+                    ['font', ['bold', 'underline', 'clear']],
+                    ['fontname', ['fontname']],
+                    ['color', ['color']],
+                    ['para', ['ul', 'ol', 'paragraph']],
+                    ['table', ['table']],
+                    ['insert', ['link', 'picture', 'video']],
+                    ['view', ['fullscreen', 'codeview', 'help']]
+                ]
+            });
+
+            // 檔案上傳事件
+            $('#fileUpload').on('change', function() {
+                var file = this.files[0];
+                if (file) {
+                    // 檢查檔案大小 (限制 10MB)
+                    if (file.size > 10 * 1024 * 1024) {
+                        toastr.error('檔案大小不能超過 10MB');
+                        this.value = '';
+                        return;
+                    }
+                    
+                    // 檢查檔案類型
+                    var allowedTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
+                    if (!allowedTypes.includes(file.type)) {
+                        toastr.error('不支援的檔案類型，請選擇 PDF、Word 或圖片檔案');
+                        this.value = '';
+                        return;
+                    }
+                    
+                    // 顯示檔案預覽
+                    $('#fileName').text(file.name);
+                    $('#filePreview').show();
+                    
+                    // 上傳檔案
+                    uploadFile(file);
+                }
+            });
+
+            // 表單提交事件
+            $('#articleForm').on('submit', function(e) {
+                console.log('表單提交事件觸發');
+                
+                // 基本驗證
+                var title = $('#title').val();
+                var author = $('#author').val();
+                var categoryID = $('#categoryID').val();
+                
+                if (!title || title.trim() === '') {
+                    e.preventDefault();
+                    toastr.error('請輸入文章標題');
+                    return false;
+                }
+                
+                if (!author || author.trim() === '') {
+                    e.preventDefault();
+                    toastr.error('請輸入作者名稱');
+                    return false;
+                }
+                
+                if (!categoryID || categoryID === '') {
+                    e.preventDefault();
+                    toastr.error('請選擇文章分類');
+                    return false;
+                }
+                
+                console.log('表單驗證通過，準備提交');
+                return true;
+            });
+        });
+
+        function openCreateModal() {
+            console.log('openCreateModal 函數被調用');
+            $('#articleModalLabel').text('新增文章');
+            $('#articleForm')[0].reset();
+            $('#articleID').val('0');
+            $('#articleForm').attr('action', '@Url.Action("Create")');
+            
+            // 清除檔案上傳
+            $('#fileUpload').val('');
+            $('#filePath').val('');
+            $('#filePreview').hide();
+            
+            // 重新初始化 SummerNote
+            $('.summernote').summernote('reset');
+            
+            console.log('Modal action set to:', $('#articleForm').attr('action'));
+            
+            var modalElement = document.getElementById('articleModal');
+            var modal = new bootstrap.Modal(modalElement);
+            modal.show();
+        }
+
+        function openEditModal(id) {
+            console.log('openEditModal 函數被調用，ID:', id);
+            console.log('jQuery 版本:', $.fn.jquery);
+            console.log('Bootstrap Modal 可用:', typeof $.fn.modal);
+            
+            // 先顯示 Modal
+            $('#articleModalLabel').text('編輯文章');
+            $('#articleForm').attr('action', '@Url.Action("Edit")');
+            
+            // 使用 jQuery 顯示 Modal
+            try {
+                $('#articleModal').modal('show');
+                console.log('Modal 顯示指令已執行');
+            } catch (error) {
+                console.error('Modal 顯示失敗:', error);
+            }
+            
+            // 通過 AJAX 獲取文章資料
+            $.ajax({
+                url: '@Url.Action("GetArticle", "Article")',
+                type: 'GET',
+                data: { id: id },
+                success: function(article) {
+                    console.log('獲取文章資料成功:', article);
+                    
+                    $('#articleID').val(article.id);
+                    $('#title').val(article.title);
+                    $('#author').val(article.author);
+                    $('#categoryID').val(article.categoryID);
+                    $('#keywords').val(article.keywords || '');
+                    $('#filePath').val(article.filePath || '');
+                    $('#sortOrder').val(article.sortOrder || 0);
+                    
+                    // 處理檔案顯示
+                    if (article.filePath) {
+                        var fileName = article.filePath.split('/').pop();
+                        $('#fileName').text(fileName);
+                        $('#filePreview').show();
+                    } else {
+                        $('#filePreview').hide();
+                    }
+                    $('#fileUpload').val(''); // 清除檔案選擇
+                    
+                    // 處理 checkbox 的狀態
+                    $('#isTop').prop('checked', article.isTop);
+                    $('#isActive').prop('checked', article.isActive);
+                    
+                    // 設置 SummerNote 內容
+                    $('.summernote').summernote('reset');
+                    $('.summernote').summernote('code', article.description || '');
+                    
+                    console.log('Modal 資料載入完成');
+                },
+                error: function(xhr, status, error) {
+                    console.error('獲取文章資料失敗:', error);
+                    toastr.error('載入文章資料失敗');
+                    $('#articleModal').modal('hide');
+                }
+            });
+        }
+
+        function toggleStatus(articleId) {
+            $.ajax({
+                url: '@Url.Action("ToggleStatus")',
+                type: 'POST',
+                data: { id: articleId },
+                success: function(response) {
+                    if (response.success) {
+                        toastr.success(response.message);
+                        location.reload();
+                    } else {
+                        toastr.error(response.message);
+                    }
+                },
+                error: function() {
+                    toastr.error('操作失敗，請稍後再試');
+                }
+            });
+        }
+
+        function deleteArticle(articleId, title) {
+            if (confirm('確定要刪除文章「' + title + '」嗎？')) {
+                $.ajax({
+                    url: '@Url.Action("Delete")',
+                    type: 'POST',
+                    data: { id: articleId },
+                    success: function(response) {
+                        if (response.success) {
+                            toastr.success(response.message);
+                            location.reload();
+                        } else {
+                            toastr.error(response.message);
+                        }
+                    },
+                    error: function() {
+                        toastr.error('刪除失敗，請稍後再試');
+                    }
+                });
+            }
+        }
+
+        function exportToExcel() {
+            // 使用 DataTable 的按鈕功能來匯出 Excel
+            var table = $('#articleTable').DataTable();
+            table.button('.buttons-excel').trigger();
+        }
+
+        function uploadFile(file) {
+            var formData = new FormData();
+            formData.append('file', file);
+            
+            $.ajax({
+                url: '@Url.Action("UploadFile", "Article")',
+                type: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function(response) {
+                    if (response.success) {
+                        $('#filePath').val(response.filePath);
+                        toastr.success('檔案上傳成功');
+                    } else {
+                        toastr.error(response.message || '檔案上傳失敗');
+                        $('#fileUpload').val('');
+                        $('#filePreview').hide();
+                    }
+                },
+                error: function() {
+                    toastr.error('檔案上傳失敗，請稍後再試');
+                    $('#fileUpload').val('');
+                    $('#filePreview').hide();
+                }
+            });
+        }
+
+        function clearFile() {
+            $('#fileUpload').val('');
+            $('#filePath').val('');
+            $('#filePreview').hide();
+        }
+    </script>
+}

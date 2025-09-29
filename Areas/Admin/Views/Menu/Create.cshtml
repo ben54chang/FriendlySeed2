@@ -1,0 +1,76 @@
+@model FriendlySeed.Models.Menu
+
+@{
+    ViewData["Title"] = "新增選單";
+    var parentMenus = ViewBag.ParentMenus as List<FriendlySeed.Models.Menu> ?? new List<FriendlySeed.Models.Menu>();
+}
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">
+                    <i class="fas fa-plus"></i> 新增選單
+                </h3>
+            </div>
+            <div class="card-body">
+                <form asp-action="Create" method="post">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label asp-for="MenuName" class="form-label">選單名稱 *</label>
+                                <input asp-for="MenuName" class="form-control" placeholder="請輸入選單名稱" />
+                                <span asp-validation-for="MenuName" class="text-danger"></span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label asp-for="ParentID" class="form-label">父選單</label>
+                                <select asp-for="ParentID" class="form-control">
+                                    <option value="">請選擇父選單（留空為根選單）</option>
+                                    @foreach (var parent in parentMenus)
+                                    {
+                                        <option value="@parent.MenuID">@parent.MenuName</option>
+                                    }
+                                </select>
+                                <span asp-validation-for="ParentID" class="text-danger"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label asp-for="SortOrder" class="form-label">排序</label>
+                                <input asp-for="SortOrder" type="number" class="form-control" placeholder="請輸入排序數字" value="0" />
+                                <span asp-validation-for="SortOrder" class="text-danger"></span>
+                                <small class="form-text text-muted">數字越小排序越前面</small>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <div class="form-check mt-4">
+                                    <input asp-for="IsActive" class="form-check-input" />
+                                    <label asp-for="IsActive" class="form-check-label">啟用選單</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> 儲存
+                        </button>
+                        <a href="@Url.Action("Index")" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left"></i> 返回列表
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

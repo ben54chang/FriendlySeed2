@@ -1,0 +1,235 @@
+@model FriendlySeed.Areas.Admin.Controllers.FileManagerViewModel
+
+@{
+    ViewData["Title"] = "檔案總管";
+}
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">檔案總管</h3>
+                <div class="card-tools">
+                    <button type="button" class="btn btn-primary btn-sm" data-toggle="modal" data-target="#uploadModal">
+                        <i class="fas fa-upload"></i> 上傳檔案
+                    </button>
+                    <button type="button" class="btn btn-success btn-sm" data-toggle="modal" data-target="#createFolderModal">
+                        <i class="fas fa-folder-plus"></i> 新增資料夾
+                    </button>
+                </div>
+            </div>
+            <div class="card-body">
+                <!-- 路徑導航 -->
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb">
+                        <li class="breadcrumb-item">
+                            <a href="@Url.Action("Index", "FileManager", new { area = "Admin" })">
+                                <i class="fas fa-home"></i> 根目錄
+                            </a>
+                        </li>
+                        @if (!string.IsNullOrEmpty(Model.CurrentPath))
+                        {
+                            var pathParts = Model.CurrentPath.Split('/', StringSplitOptions.RemoveEmptyEntries);
+                            for (int i = 0; i < pathParts.Length; i++)
+                            {
+                                var currentPart = pathParts[i];
+                                var pathToHere = string.Join("/", pathParts.Take(i + 1));
+                                <li class="breadcrumb-item">
+                                    <a href="@Url.Action("Index", "FileManager", new { area = "Admin", path = pathToHere })">@currentPart</a>
+                                </li>
+                            }
+                        }
+                    </ol>
+                </nav>
+
+                <!-- 檔案列表 -->
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>名稱</th>
+                                <th>類型</th>
+                                <th>大小</th>
+                                <th>修改時間</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (!string.IsNullOrEmpty(Model.ParentPath))
+                            {
+                                <tr>
+                                    <td>
+                                        <i class="fas fa-level-up-alt text-primary"></i>
+                                        <a href="@Url.Action("Index", "FileManager", new { area = "Admin", path = Model.ParentPath })">..</a>
+                                    </td>
+                                    <td>資料夾</td>
+                                    <td>-</td>
+                                    <td>-</td>
+                                    <td>-</td>
+                                </tr>
+                            }
+
+                            @foreach (var dir in Model.Directories)
+                            {
+                                <tr>
+                                    <td>
+                                        <i class="fas fa-folder text-warning"></i>
+                                        <a href="@Url.Action("Index", "FileManager", new { area = "Admin", path = string.IsNullOrEmpty(Model.CurrentPath) ? dir.Name : Model.CurrentPath + "/" + dir.Name })">@dir.Name</a>
+                                    </td>
+                                    <td>資料夾</td>
+                                    <td>-</td>
+                                    <td>@dir.LastWriteTime.ToString("yyyy-MM-dd HH:mm")</td>
+                                    <td>
+                                        <button class="btn btn-danger btn-sm" onclick="deleteFolder('@dir.Name')">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            }
+
+                            @foreach (var file in Model.Files)
+                            {
+                                <tr>
+                                    <td>
+                                        <i class="fas fa-file text-info"></i>
+                                        @file.Name
+                                    </td>
+                                    <td>檔案</td>
+                                    <td>@FormatFileSize(file.Length)</td>
+                                    <td>@file.LastWriteTime.ToString("yyyy-MM-dd HH:mm")</td>
+                                    <td>
+                                        <a href="/uploads/@(string.IsNullOrEmpty(Model.CurrentPath) ? "" : Model.CurrentPath + "/")@file.Name" target="_blank" class="btn btn-info btn-sm">
+                                            <i class="fas fa-download"></i>
+                                        </a>
+                                        <button class="btn btn-danger btn-sm" onclick="deleteFile('@file.Name')">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 上傳檔案 Modal -->
+<div class="modal fade" id="uploadModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">上傳檔案</h5>
+                <button type="button" class="close" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <form asp-action="UploadFile" method="post" enctype="multipart/form-data">
+                <div class="modal-body">
+                    <input type="hidden" name="currentPath" value="@Model.CurrentPath" />
+                    <div class="form-group">
+                        <label for="file">選擇檔案：</label>
+                        <input type="file" class="form-control-file" name="file" required />
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">取消</button>
+                    <button type="submit" class="btn btn-primary">上傳</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- 新增資料夾 Modal -->
+<div class="modal fade" id="createFolderModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">新增資料夾</h5>
+                <button type="button" class="close" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <form asp-action="CreateFolder" method="post">
+                <div class="modal-body">
+                    <input type="hidden" name="currentPath" value="@Model.CurrentPath" />
+                    <div class="form-group">
+                        <label for="folderName">資料夾名稱：</label>
+                        <input type="text" class="form-control" name="folderName" required />
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">取消</button>
+                    <button type="submit" class="btn btn-success">建立</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function deleteFile(fileName) {
+            if (confirm('確定要刪除這個檔案嗎？')) {
+                var form = document.createElement('form');
+                form.method = 'POST';
+                form.action = '@Url.Action("DeleteFile", "FileManager", new { area = "Admin" })';
+                
+                var currentPathInput = document.createElement('input');
+                currentPathInput.type = 'hidden';
+                currentPathInput.name = 'currentPath';
+                currentPathInput.value = '@Model.CurrentPath';
+                
+                var fileNameInput = document.createElement('input');
+                fileNameInput.type = 'hidden';
+                fileNameInput.name = 'fileName';
+                fileNameInput.value = fileName;
+                
+                form.appendChild(currentPathInput);
+                form.appendChild(fileNameInput);
+                document.body.appendChild(form);
+                form.submit();
+            }
+        }
+
+        function deleteFolder(folderName) {
+            if (confirm('確定要刪除這個資料夾嗎？資料夾內的所有檔案都會被刪除！')) {
+                var form = document.createElement('form');
+                form.method = 'POST';
+                form.action = '@Url.Action("DeleteFolder", "FileManager", new { area = "Admin" })';
+                
+                var currentPathInput = document.createElement('input');
+                currentPathInput.type = 'hidden';
+                currentPathInput.name = 'currentPath';
+                currentPathInput.value = '@Model.CurrentPath';
+                
+                var folderNameInput = document.createElement('input');
+                folderNameInput.type = 'hidden';
+                folderNameInput.name = 'folderName';
+                folderNameInput.value = folderName;
+                
+                form.appendChild(currentPathInput);
+                form.appendChild(folderNameInput);
+                document.body.appendChild(form);
+                form.submit();
+            }
+        }
+    </script>
+}
+
+@functions {
+    string FormatFileSize(long bytes)
+    {
+        string[] sizes = { "B", "KB", "MB", "GB" };
+        double len = bytes;
+        int order = 0;
+        while (len >= 1024 && order < sizes.Length - 1)
+        {
+            order++;
+            len = len / 1024;
+        }
+        return $"{len:0.##} {sizes[order]}";
+    }
+}

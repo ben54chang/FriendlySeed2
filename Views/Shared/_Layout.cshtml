@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - FriendlySeed</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+</head>
+<body>
+    <header>
+        <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+            <div class="container">
+                <div class="navbar-nav d-flex flex-row w-100">
+                    <a class="navbar-brand fw-bold me-4" asp-area="" asp-controller="Home" asp-action="Index">
+                        <i class="fas fa-seedling text-success me-2"></i> 
+                        <span class="brand-text">FriendlySeed</span>
+                    </a>
+                    <a class="nav-link me-3" asp-area="" asp-controller="Home" asp-action="Index">
+                        <i class="fas fa-home me-1"></i> 首頁
+                    </a>
+                    <a class="nav-link me-3" href="/Admin/Article">
+                        <i class="fas fa-newspaper me-1"></i> 文章
+                    </a>
+                    <a class="nav-link me-3" href="/Admin/Teacher">
+                        <i class="fas fa-chalkboard-teacher me-1"></i> 教師
+                    </a>
+                    <a class="nav-link me-3" asp-area="" asp-controller="Home" asp-action="Privacy">
+                        <i class="fas fa-info-circle me-1"></i> 關於我們
+                    </a>
+                    <a class="nav-link btn btn-outline-light btn-sm px-3 ms-auto" href="~/Admin" target="_blank">
+                        <i class="fas fa-cog me-1"></i> 管理後台
+                    </a>
+                </div>
+            </div>
+        </nav>
+    </header>
+    <div class="container">
+        <main role="main" class="pb-3">
+            @RenderBody()
+        </main>
+    </div>
+
+    <footer class="pt-5 pb-3" style="background: #1f3b53; color: #ddd;">
+        <div class="container">
+            <div class="row">
+                <!-- 快速連結 -->
+                <div class="col-md-4 mb-3">
+                    <h5 style="font-weight: bold; color: #fff; margin-bottom: 1rem;">快速連結</h5>
+                    <a href="/" class="footer-link" style="color: #bbb; text-decoration: none; display: block; margin-bottom: 0.5rem; transition: color 0.2s ease-in-out;">首頁</a>
+                    <a href="/Admin/Article" class="footer-link" style="color: #bbb; text-decoration: none; display: block; margin-bottom: 0.5rem; transition: color 0.2s ease-in-out;">文章</a>
+                    <a href="/Admin/Teacher" class="footer-link" style="color: #bbb; text-decoration: none; display: block; margin-bottom: 0.5rem; transition: color 0.2s ease-in-out;">教師</a>
+                    <a href="/Home/Privacy" class="footer-link" style="color: #bbb; text-decoration: none; display: block; margin-bottom: 0.5rem; transition: color 0.2s ease-in-out;">關於我們</a>
+                </div>
+
+                <!-- 服務 -->
+                <div class="col-md-4 mb-3">
+                    <h5 style="font-weight: bold; color: #fff; margin-bottom: 1rem;">服務</h5>
+                    <a href="#" class="footer-link" style="color: #bbb; text-decoration: none; display: block; margin-bottom: 0.5rem; transition: color 0.2s ease-in-out;">線上課程</a>
+                    <a href="#" class="footer-link" style="color: #bbb; text-decoration: none; display: block; margin-bottom: 0.5rem; transition: color 0.2s ease-in-out;">學習資源</a>
+                    <a href="#" class="footer-link" style="color: #bbb; text-decoration: none; display: block; margin-bottom: 0.5rem; transition: color 0.2s ease-in-out;">師資培訓</a>
+                    <a href="#" class="footer-link" style="color: #bbb; text-decoration: none; display: block; margin-bottom: 0.5rem; transition: color 0.2s ease-in-out;">學習支援</a>
+                </div>
+
+                <!-- 聯絡我們 -->
+                <div class="col-md-4 mb-3">
+                    <h5 style="font-weight: bold; color: #fff; margin-bottom: 1rem;">聯絡我們</h5>
+                    <p>
+                        <i class="fas fa-envelope me-2"></i>
+                        <a href="mailto:info@friendlyseed.com" class="footer-link" style="color: #bbb; text-decoration: none; transition: color 0.2s ease-in-out;">
+                            info@friendlyseed.com
+                        </a>
+                    </p>
+                </div>
+            </div>
+
+            <!-- 底部版權 -->
+            <div class="footer-bottom" style="border-top: 1px solid rgba(255, 255, 255, 0.2); margin-top: 1.5rem; padding-top: 1rem; text-align: center; font-size: 0.9rem; color: #aaa;">
+                &copy; 2025 FriendlySeed. All rights reserved.
+            </div>
+        </div>
+    </footer>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

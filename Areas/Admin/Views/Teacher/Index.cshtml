@@ -1,0 +1,429 @@
+@model IEnumerable<FriendlySeed.Models.Teacher>
+@{
+    ViewData["Title"] = "教師管理";
+}
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        @TempData["SuccessMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        @TempData["ErrorMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">
+                    <i class="fas fa-user-graduate"></i> 教師管理
+                </h3>
+                <div class="card-tools">
+                    <button type="button" class="btn btn-success btn-sm" onclick="exportToExcel()">
+                        <i class="fas fa-file-excel"></i> 匯出 Excel
+                    </button>
+                    <button type="button" class="btn btn-primary btn-sm" onclick="openCreateModal()">
+                        <i class="fas fa-plus"></i> 新增教師
+                    </button>
+                </div>
+            </div>
+                    <div class="card-body">
+                        <table id="teacherTable" class="table table-bordered table-striped">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>姓名</th>
+                                    <th>電子信箱</th>
+                                    <th>服務單位</th>
+                                    <th>職稱</th>
+                                    <th>性別</th>
+                                    <th>生日</th>
+                                    <th>縣市</th>
+                                    <th>鄉鎮市區</th>
+                                    <th>狀態</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var teacher in Model)
+                                {
+                                    <tr>
+                                        <td>@teacher.ID</td>
+                                        <td>@teacher.Name</td>
+                                        <td>@teacher.Email</td>
+                                        <td>@teacher.Organization</td>
+                                        <td>@teacher.Position</td>
+                                        <td>@teacher.Gender</td>
+                                        <td>@(teacher.BirthDate?.ToString("yyyy-MM-dd"))</td>
+                                        <td>@teacher.City</td>
+                                        <td>@teacher.District</td>
+                                        <td>
+                                            @if (teacher.IsActive)
+                                            {
+                                                <span class="badge badge-success">啟用</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge badge-secondary">停用</span>
+                                            }
+                                        </td>
+                                        <td>
+                                            <div class="btn-group btn-group-sm">
+                                                <button type="button" class="btn btn-info btn-sm" onclick="openEditModal(@teacher.ID)" title="編輯">
+                                                    <i class="fas fa-edit"></i>
+                                                </button>
+                                                <button type="button" class="btn btn-warning btn-sm" onclick="toggleStatus(@teacher.ID)" title="切換狀態">
+                                                    <i class="fas fa-toggle-@(teacher.IsActive ? "on" : "off")"></i>
+                                                </button>
+                                                <button type="button" class="btn btn-danger btn-sm" onclick="deleteTeacher(@teacher.ID)" title="刪除">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+<!-- Teacher Modal -->
+<div class="modal fade" id="teacherModal" tabindex="-1" aria-labelledby="teacherModalLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="teacherModalLabel">新增教師</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="關閉"></button>
+            </div>
+            <form id="teacherForm" method="post" action="@Url.Action("Create")">
+                @Html.AntiForgeryToken()
+                <div class="modal-body">
+                    <input type="hidden" id="teacherID" name="ID" value="0" />
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                <label for="email" class="form-label">電子信箱 <span class="text-danger">*</span></label>
+                                <input type="email" id="email" name="Email" class="form-control" placeholder="請輸入電子信箱" required />
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                <label for="name" class="form-label">姓名 <span class="text-danger">*</span></label>
+                                <input type="text" id="name" name="Name" class="form-control" placeholder="請輸入姓名" required />
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                <label for="birthDate" class="form-label">生日</label>
+                                <input type="date" id="birthDate" name="BirthDate" class="form-control" />
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                <label for="gender" class="form-label">性別</label>
+                                <select id="gender" name="Gender" class="form-control">
+                                    <option value="">請選擇性別</option>
+                                    <option value="男">男</option>
+                                    <option value="女">女</option>
+                                    <option value="其他">其他</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                <label for="organization" class="form-label">服務單位</label>
+                                <input type="text" id="organization" name="Organization" class="form-control" placeholder="請輸入服務單位" />
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                <label for="position" class="form-label">職稱</label>
+                                <input type="text" id="position" name="Position" class="form-control" placeholder="請輸入職稱" />
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                <label for="password" class="form-label">密碼</label>
+                                <input type="password" id="password" name="Password" class="form-control" placeholder="請輸入密碼" />
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                <label for="confirmPassword" class="form-label">確認密碼</label>
+                                <input type="password" id="confirmPassword" name="ConfirmPassword" class="form-control" placeholder="請再次輸入密碼" />
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                <label for="city" class="form-label">縣市</label>
+                                <input type="text" id="city" name="City" class="form-control" placeholder="請輸入縣市" />
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                <label for="district" class="form-label">鄉鎮市區</label>
+                                <input type="text" id="district" name="District" class="form-control" placeholder="請輸入鄉鎮市區" />
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group mb-3">
+                        <div class="form-check">
+                            <input type="hidden" name="IsActive" value="false" />
+                            <input type="checkbox" id="isActive" name="IsActive" value="true" class="form-check-input" checked />
+                            <label for="isActive" class="form-check-label">啟用狀態</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="submit" class="btn btn-primary">儲存</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
+    
+    <script>
+        $(document).ready(function() {
+            // 密碼一致性即時檢查
+            $('#confirmPassword').on('input', function() {
+                var password = $('#password').val();
+                var confirmPassword = $(this).val();
+                
+                if (confirmPassword && password !== confirmPassword) {
+                    $(this).addClass('is-invalid');
+                    if (!$(this).next('.invalid-feedback').length) {
+                        $(this).after('<div class="invalid-feedback">密碼與確認密碼不一致</div>');
+                    }
+                } else {
+                    $(this).removeClass('is-invalid');
+                    $(this).next('.invalid-feedback').remove();
+                }
+            });
+            
+            $('#password').on('input', function() {
+                var password = $(this).val();
+                var confirmPassword = $('#confirmPassword').val();
+                
+                if (confirmPassword && password !== confirmPassword) {
+                    $('#confirmPassword').addClass('is-invalid');
+                    if (!$('#confirmPassword').next('.invalid-feedback').length) {
+                        $('#confirmPassword').after('<div class="invalid-feedback">密碼與確認密碼不一致</div>');
+                    }
+                } else {
+                    $('#confirmPassword').removeClass('is-invalid');
+                    $('#confirmPassword').next('.invalid-feedback').remove();
+                }
+            });
+            
+            // 表單提交事件
+            $('#teacherForm').on('submit', function(e) {
+                e.preventDefault();
+                console.log('表單提交事件觸發');
+                
+                // 基本驗證
+                var email = $('#email').val();
+                var name = $('#name').val();
+                var password = $('#password').val();
+                
+                if (!email || email.trim() === '') {
+                    toastr.error('請輸入電子信箱');
+                    return false;
+                }
+                
+                if (!name || name.trim() === '') {
+                    toastr.error('請輸入姓名');
+                    return false;
+                }
+                
+                if (!password || password.trim() === '') {
+                    toastr.error('請輸入密碼');
+                    return false;
+                }
+                
+                // 檢查密碼一致性
+                var confirmPassword = $('#confirmPassword').val();
+                if (password !== confirmPassword) {
+                    toastr.error('密碼與確認密碼不一致，請重新輸入');
+                    return false;
+                }
+                
+                console.log('表單驗證通過，準備提交');
+                
+                var formData = new FormData(this);
+                var url = $(this).attr('action');
+                
+                $.ajax({
+                    url: url,
+                    type: 'POST',
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    success: function(response) {
+                        console.log('AJAX 回應:', response);
+                        if (response.success) {
+                            toastr.success(response.message);
+                            $('#teacherModal').modal('hide');
+                            location.reload();
+                        } else {
+                            toastr.error(response.message);
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        console.error("AJAX Error: " + status + error);
+                        toastr.error('儲存時發生錯誤');
+                    }
+                });
+                
+                return false;
+            });
+        });
+
+        function openCreateModal() {
+            console.log('openCreateModal 函數被調用');
+            $('#teacherModalLabel').text('新增教師');
+            $('#teacherForm')[0].reset();
+            $('#teacherID').val('0');
+            $('#teacherForm').attr('action', '@Url.Action("Create")');
+            $('#isActive').prop('checked', true);
+            
+            console.log('Modal action set to:', $('#teacherForm').attr('action'));
+            
+            var modalElement = document.getElementById('teacherModal');
+            var modal = new bootstrap.Modal(modalElement);
+            modal.show();
+        }
+
+        function openEditModal(id) {
+            console.log('openEditModal 函數被調用，ID:', id);
+            console.log('jQuery 版本:', $.fn.jquery);
+            console.log('Bootstrap Modal 可用:', typeof $.fn.modal);
+            
+            // 先顯示 Modal
+            $('#teacherModalLabel').text('編輯教師');
+            $('#teacherForm').attr('action', '@Url.Action("Edit")');
+            
+            // 使用 jQuery 顯示 Modal
+            try {
+                $('#teacherModal').modal('show');
+                console.log('Modal 顯示指令已執行');
+            } catch (error) {
+                console.error('Modal 顯示失敗:', error);
+            }
+            
+            // 載入教師資料
+            $.ajax({
+                url: '@Url.Action("GetTeacher")',
+                type: 'GET',
+                data: { id: id },
+                success: function(response) {
+                    console.log('AJAX 回應:', response);
+                    if (response.success) {
+                        var teacher = response;
+                        $('#teacherID').val(teacher.id);
+                        $('#email').val(teacher.email || '');
+                        $('#name').val(teacher.name || '');
+                        $('#birthDate').val(teacher.birthDate || '');
+                        $('#gender').val(teacher.gender || '');
+                        $('#organization').val(teacher.organization || '');
+                        $('#position').val(teacher.position || '');
+                        $('#password').val(teacher.password || '');
+                        $('#confirmPassword').val(teacher.password || ''); // 編輯時，確認密碼欄位設為相同值
+                        $('#city').val(teacher.city || '');
+                        $('#district').val(teacher.district || '');
+                        $('#isActive').prop('checked', teacher.isActive);
+                        
+                        console.log('教師資料載入完成');
+                    } else {
+                        console.error('載入教師資料失敗:', response.message);
+                        toastr.error(response.message || '載入教師資料失敗');
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error("AJAX Error: " + status + error);
+                    toastr.error('載入教師資料時發生錯誤');
+                }
+            });
+        }
+
+    function toggleStatus(id) {
+        if (confirm('確定要切換此教師的狀態嗎？')) {
+            $.ajax({
+                url: '@Url.Action("ToggleStatus")',
+                type: 'POST',
+                data: { id: id },
+                success: function(response) {
+                    if (response.success) {
+                        toastr.success(response.message);
+                        location.reload();
+                    } else {
+                        toastr.error(response.message);
+                    }
+                },
+                error: function() {
+                    toastr.error('切換狀態時發生錯誤');
+                }
+            });
+        }
+    }
+
+    function exportToExcel() {
+        // 使用 DataTable 的按鈕功能來匯出 Excel
+        var table = $('#teacherTable').DataTable();
+        table.button('.buttons-excel').trigger();
+    }
+
+    function deleteTeacher(id) {
+        if (confirm('確定要刪除此教師嗎？此操作無法復原。')) {
+            $.ajax({
+                url: '@Url.Action("Delete")',
+                type: 'POST',
+                data: { id: id },
+                success: function(response) {
+                    if (response.success) {
+                        toastr.success(response.message);
+                        location.reload();
+                    } else {
+                        toastr.error(response.message);
+                    }
+                },
+                error: function() {
+                    toastr.error('刪除教師時發生錯誤');
+                }
+            });
+        }
+    }
+
+</script>
+}
